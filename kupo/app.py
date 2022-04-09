@@ -72,7 +72,8 @@ class DirectoryListRenderable:
                 total_size_bytes += file.stat().st_size
             except OSError:
                 pass
-        table.add_row(Padding(f"{num_files} items", pad=(0, 1)), convert_size(total_size_bytes),
+        table.add_row(Padding(f"{num_files} items", pad=(0, 1)),
+                      convert_size(total_size_bytes),
                       style="white on #1c3663")
         for index, file in enumerate(self.files):
             if index == self.selected_index:
@@ -121,7 +122,8 @@ class DirectoryList(Widget, can_focus=True):
 
     def update_files(self, directory: Path, active_path: Path | None = None):
         self.files = list(
-            sorted(list_files_in_dir(directory), key=lambda p: (not p.is_dir(), p.name)))
+            sorted(list_files_in_dir(directory),
+                   key=lambda p: (not p.is_dir(), p.name)))
         if active_path:
             self.highlight_file(active_path)
         self.styles.height = float(len(self.files))
@@ -345,4 +347,9 @@ class FilesApp(App):
         self.preview_wrapper.scroll_end(animate=False)
 
 
-FilesApp.run(css_file="files.css", log="textual.log")
+def run():
+    FilesApp.run(css_file="files.css", log="textual.log")
+
+
+if __name__ == '__main__':
+    run()

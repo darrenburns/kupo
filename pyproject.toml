@@ -6,12 +6,14 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-textual = {git = "ssh://git@github.com/darrenburns/textual.git", rev = "css"}
+textual = { git = "ssh://git@github.com/darrenburns/textual.git", rev = "css" }
 rich = "^12.2.0"
-
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+
+[tool.poetry.scripts]
+kupo = "kupo.app:run"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
