@@ -1,0 +1,69 @@
+* {
+    transition: color 500ms linear, background 500ms linear;
+}
+
+Screen {
+    layout: dock;
+}
+
+#header {
+    height: 1;
+    color: $text-accent1;
+    background: $accent1;
+    width: 100%;
+}
+
+#footer {
+    height: 1;
+    color: $text-accent2;
+    background: $accent2;
+    width: 100%;
+}
+
+.empty_space {
+    color: $primary;
+}
+
+#body_wrapper {
+    layout: dock;
+    docks: lhs=left/1 rhs=right/1;
+    background: $surface;
+    color: $text-surface;
+}
+
+#file_preview_wrapper {
+    dock: rhs;
+    color: $surface;
+    background: $surface;
+    layout: vertical;
+    overflow: auto auto;
+}
+
+#file_preview_content {
+    color: $text-surface;
+    background: $surface;
+    /*height: 100;*/
+}
+
+#this_directory {
+    dock: lhs;
+    width: 32;
+    /*dock: lhs;*/
+    /*border-left: vkey $primary-lighten-1;*/
+    border-right: vkey $accent1;
+    color: $text-surface;
+    background: $surface;
+    layout: vertical;
+}
+
+#parent_directory {
+    dock: lhs;
+    /*min-width: 14;*/
+    /*max-width: 25%;*/
+    /*dock: lhs;*/
+    width: 32;
+    border-right: vkey $accent1;
+    /*border-left: vkey $primary-lighten-1;*/
+    color: $text-surface;
+    background: $surface;
+}
