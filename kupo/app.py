@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os.path
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -266,6 +267,8 @@ class FilesApp(App):
     async def on_mount(self):
         self.dark = True
 
+        self.selected_path = next(Path.cwd().iterdir(), Path.cwd())
+
         self.parent_directory = DirectoryList(
             path=self.selected_path.parent.parent,
             id="parent_directory",
@@ -347,9 +350,21 @@ class FilesApp(App):
         self.preview_wrapper.scroll_end(animate=False)
 
 
+def get_install_directory():
+    return Path(sys.modules[__name__].__file__).parent
+
+
+def run_develop():
+    directory = get_install_directory()
+    FilesApp.run(css_file=directory / "files.css", log=str(directory / "kupo.log"))
+
+
 def run():
-    FilesApp.run(css_file="files.css", log="textual.log")
+    directory = get_install_directory()
+    FilesApp.run(css_file=directory / "files.css")
+
+    run_develop()
 
 
 if __name__ == '__main__':
-    run()
+    run_develop()
