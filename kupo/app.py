@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import math
 import os.path
 import sys
@@ -114,13 +115,13 @@ class DirectoryList(Widget, can_focus=True):
     def on_blur(self, event: events.Blur):
         self.has_focus = False
 
-    def move_down(self):
+    async def move_down(self):
         self.selected_index = max(0, self.selected_index - 1)
-        self._report_active_path()
+        await self._report_active_path()
 
-    def move_up(self):
+    async def move_up(self):
         self.selected_index = min(len(self.files) - 1, self.selected_index + 1)
-        self._report_active_path()
+        await self._report_active_path()
 
     def update_files(self, directory: Path, active_path: Path | None = None):
         self.files = list(
@@ -138,9 +139,9 @@ class DirectoryList(Widget, can_focus=True):
             index = 0
         self.selected_index = index
 
-    def _report_active_path(self) -> None:
+    async def _report_active_path(self) -> None:
         path = self.files[self.selected_index]
-        self.emit_no_wait(SelectedPath(path, sender=self))
+        await self.emit(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
         return Padding(DirectoryListRenderable(self.files, self.selected_index), pad=0)
@@ -212,6 +213,7 @@ class EmptySpace(Widget):
         return Emptiness()
 
 
+@functools.lru_cache(8)
 def read_text_from_path(path: Path) -> str:
     try:
         return path.read_text()
@@ -240,14 +242,16 @@ class FilePreview(Widget):
                 indent_guides=True,
                 background_color="#111111" if self.app.dark else "#f0f0f0"
             )
+            self.styles.height = float(len(preview.code.splitlines()) + 1)
         elif self.current_path.is_dir():
             files = list_files_in_dir(self.current_path)
             preview = DirectoryListRenderable(files=files, selected_index=None)
+            self.styles.height = float(len(files) + 1)
         else:
             preview = Emptiness()
+            self.styles.height = float(self.console.options.height)
 
         preview = Padding(preview, pad=0)
-        self.styles.height = float(len(self.console.render_lines(preview)) + 1)
         self.refresh(layout=True)
         return preview
 
@@ -265,6 +269,14 @@ class FilesApp(App):
 
     def on_load(self):
         self.bind("q", "quit", "Quit")
+        self.bind("j", "next_file", "Next File")
+        self.bind("k", "prev_file", "Previous File")
+        self.bind("l", "choose_path", "Go To Child")
+        self.bind("h", "goto_parent", "Go To Parent")
+        self.bind("enter", "choose_path", "Go To Child")
+        self.bind("d", "toggle_dark", "Toggle Dark Mode")
+        self.bind("g", "top_of_file", "Top Of File")
+        self.bind("G", "bottom_of_file", "Bottom Of File")
         self.bind("?", "help", "Help")
 
     async def on_mount(self):
@@ -298,15 +310,15 @@ class FilesApp(App):
             footer=self.footer,
         )
         await self.set_focus(self.this_directory)
-        self._update_ui_new_selected_path()
+        await self._update_ui_new_selected_path()
 
-    def handle_selected_path(self, message: SelectedPath):
+    async def handle_selected_path(self, message: SelectedPath):
         path = message.path
         self.selected_path = path
         self.file_preview.new_selected_path(path)
-        self._update_ui_new_selected_path()
+        await self._update_ui_new_selected_path()
 
-    def _update_ui_new_selected_path(self):
+    async def _update_ui_new_selected_path(self):
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
         self.this_directory.update_files(
@@ -324,34 +336,34 @@ class FilesApp(App):
     async def on_key(self, event) -> None:
         await self.dispatch_key(event)
 
-    def key_j(self) -> None:
-        self.this_directory.move_up()
+    async def action_next_file(self) -> None:
+        await self.this_directory.move_up()
 
-    def key_k(self) -> None:
-        self.this_directory.move_down()
+    async def action_prev_file(self) -> None:
+        await self.this_directory.move_down()
 
-    def key_h(self) -> None:
+    async def action_goto_parent(self) -> None:
         self.selected_path = self.selected_path.parent
-        self._update_ui_new_selected_path()
+        await self._update_ui_new_selected_path()
 
-    def key_l(self) -> None:
+    async def action_choose_path(self) -> None:
         self.log(self.selected_path)
         if self.selected_path.is_dir():
             files_in_dir = sorted(list_files_in_dir(self.selected_path),
                                   key=lambda f: (not f.is_dir(), f.name))
             self.selected_path = next(iter(files_in_dir), self.selected_path)
-        self._update_ui_new_selected_path()
+        await self._update_ui_new_selected_path()
 
-    def key_d(self):
+    async def action_toggle_dark(self):
         self.dark = not self.dark
 
-    def key_g(self):
+    async def action_top_of_file(self):
         self.preview_wrapper.scroll_home(animate=False)
 
-    def key_G(self):
+    async def action_bottom_of_file(self):
         self.preview_wrapper.scroll_end(animate=False)
 
-    def action_help(self):
+    async def action_help(self):
         self.preview_wrapper.scroll_home(animate=False)
         self.file_preview.new_selected_path(
             get_install_directory() / "kupo_commands.md"
@@ -364,12 +376,12 @@ def get_install_directory() -> Path:
 
 def run_develop():
     directory = get_install_directory()
-    FilesApp.run(css_file=directory / "files.css", log=str(directory / "kupo.log"))
+    FilesApp.run(css_file=directory / "kupo.css", log=str(directory / "kupo.log"))
 
 
 def run():
     directory = get_install_directory()
-    FilesApp.run(css_file=directory / "files.css")
+    FilesApp.run(css_file=directory / "kupo.css")
 
     run_develop()
 
