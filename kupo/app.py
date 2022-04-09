@@ -8,6 +8,7 @@ from pathlib import Path
 
 from rich.align import Align
 from rich.console import RenderableType, Console, ConsoleOptions, RenderResult
+from rich.markdown import Markdown
 from rich.markup import escape
 from rich.padding import Padding
 from rich.segment import Segment
@@ -229,25 +230,26 @@ class FilePreview(Widget):
 
     def render(self) -> RenderableType:
         if self.current_path.is_file():
+            file_content = read_text_from_path(self.current_path)
+            file_name = self.current_path.name
             preview = Syntax(
-                code=read_text_from_path(self.current_path),
-                lexer=Syntax.guess_lexer(self.current_path.name),
+                code=file_content,
+                lexer=Syntax.guess_lexer(file_name),
                 theme="monokai" if self.app.dark else "manni",
                 line_numbers=True,
                 indent_guides=True,
                 background_color="#111111" if self.app.dark else "#f0f0f0"
             )
-            lines = preview.code.splitlines()
-            self.styles.height = float(len(lines) + 1)
-            # self.styles.width = float(max(len(line) for line in lines))
         elif self.current_path.is_dir():
             files = list_files_in_dir(self.current_path)
             preview = DirectoryListRenderable(files=files, selected_index=None)
-            self.styles.height = float(len(files) + 1)
         else:
             preview = Emptiness()
 
-        return Padding(preview, pad=0)
+        preview = Padding(preview, pad=0)
+        self.styles.height = float(len(self.console.render_lines(preview)) + 1)
+        self.refresh(layout=True)
+        return preview
 
 
 def list_files_in_dir(dir: Path):
@@ -263,6 +265,7 @@ class FilesApp(App):
 
     def on_load(self):
         self.bind("q", "quit", "Quit")
+        self.bind("?", "help", "Help")
 
     async def on_mount(self):
         self.dark = True
@@ -282,7 +285,7 @@ class FilesApp(App):
         self.file_preview = FilePreview(current_path=self.selected_path,
                                         id="file_preview_content")
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
-        wrapper = Widget(
+        self.body_wrapper = Widget(
             self.parent_directory,
             self.this_directory,
             self.preview_wrapper,
@@ -291,7 +294,7 @@ class FilesApp(App):
         self.footer = AppFooter(current_path=self.selected_path.parent)
         self.mount(
             header=self.header,
-            body_wrapper=wrapper,
+            body_wrapper=self.body_wrapper,
             footer=self.footer,
         )
         await self.set_focus(self.this_directory)
@@ -303,7 +306,7 @@ class FilesApp(App):
         self.file_preview.new_selected_path(path)
         self._update_ui_new_selected_path()
 
-    def _update_ui_new_selected_path(self, previous_path=None):
+    def _update_ui_new_selected_path(self):
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
         self.this_directory.update_files(
@@ -321,24 +324,23 @@ class FilesApp(App):
     async def on_key(self, event) -> None:
         await self.dispatch_key(event)
 
-    def key_j(self, event: events.Click) -> None:
+    def key_j(self) -> None:
         self.this_directory.move_up()
 
-    def key_k(self, event: events.Click) -> None:
+    def key_k(self) -> None:
         self.this_directory.move_down()
 
-    def key_h(self, event: events.Click) -> None:
-        previous_path = self.selected_path
+    def key_h(self) -> None:
         self.selected_path = self.selected_path.parent
-        self._update_ui_new_selected_path(previous_path=previous_path)
+        self._update_ui_new_selected_path()
 
-    def key_l(self, event: events.Click) -> None:
+    def key_l(self) -> None:
         self.log(self.selected_path)
         if self.selected_path.is_dir():
             files_in_dir = sorted(list_files_in_dir(self.selected_path),
                                   key=lambda f: (not f.is_dir(), f.name))
             self.selected_path = next(iter(files_in_dir), self.selected_path)
-        self._update_ui_new_selected_path(self.selected_path)
+        self._update_ui_new_selected_path()
 
     def key_d(self):
         self.dark = not self.dark
@@ -349,8 +351,14 @@ class FilesApp(App):
     def key_G(self):
         self.preview_wrapper.scroll_end(animate=False)
 
+    def action_help(self):
+        self.preview_wrapper.scroll_home(animate=False)
+        self.file_preview.new_selected_path(
+            get_install_directory() / "kupo_commands.md"
+        )
 
-def get_install_directory():
+
+def get_install_directory() -> Path:
     return Path(sys.modules[__name__].__file__).parent
 
 

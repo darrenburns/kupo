@@ -1,6 +1,6 @@
-* {
-    transition: color 500ms linear, background 500ms linear;
-}
+/** {*/
+/*    transition: color 500ms linear, background 500ms linear;*/
+/*}*/
 
 Screen {
     layout: dock;
@@ -66,4 +66,9 @@ Screen {
     /*border-left: vkey $primary-lighten-1;*/
     color: $text-surface;
     background: $surface;
+}
+
+.help {
+    /*width: 100;*/
+    /*height: 100;*/
 }
