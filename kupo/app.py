@@ -9,7 +9,6 @@ from pathlib import Path
 
 from rich.align import Align
 from rich.console import RenderableType, Console, ConsoleOptions, RenderResult
-from rich.markdown import Markdown
 from rich.markup import escape
 from rich.padding import Padding
 from rich.segment import Segment
@@ -23,8 +22,6 @@ from textual.message import Message
 from textual.reactive import Reactive
 from textual.widget import Widget
 
-
-# TODO: Create app with no on_mount and it RecursionErrors
 
 def convert_size(size_bytes):
     if size_bytes == 0:
@@ -309,7 +306,7 @@ class FilesApp(App):
             body_wrapper=self.body_wrapper,
             footer=self.footer,
         )
-        await self.set_focus(self.this_directory)
+        self.set_focus(self.this_directory)
         await self._update_ui_new_selected_path()
 
     async def handle_selected_path(self, message: SelectedPath):
@@ -376,12 +373,14 @@ def get_install_directory() -> Path:
 
 def run_develop():
     directory = get_install_directory()
-    FilesApp.run(css_file=directory / "kupo.css", log=str(directory / "kupo.log"))
+    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log")
+    app.run()
 
 
 def run():
     directory = get_install_directory()
-    FilesApp.run(css_file=directory / "kupo.css")
+    app = FilesApp(css_path=directory / "kupo.css")
+    app.run()
 
     run_develop()
 
