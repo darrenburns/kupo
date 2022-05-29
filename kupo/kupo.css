@@ -10,6 +10,7 @@ Screen {
     height: 1;
     color: $text-accent;
     background: $accent;
+    padding: 0 1;
 }
 
 #footer {
@@ -35,6 +36,8 @@ Screen {
     color: $surface;
     background: $surface;
     overflow: auto auto;
+    scrollbar-color: dodgerblue;
+    scrollbar-background: #0e3e6e;
 }
 
 #file_preview_content {
@@ -78,8 +81,25 @@ Screen {
     border-right: heavy $accent;
 }
 
+
+#this_directory_header {
+    dock: tdwtop;
+    height: 1;
+}
+
+.directory_list_header {
+    height: 1;
+    padding: 0 2;
+    background: $accent-darken-1;
+}
+
 #parent_directory {
-    dock: lhs;
     color: $text-surface;
     background: $surface;
+    height: auto;
+}
+
+#parent_directory_wrapper {
+    dock: lhs;
+    overflow: hidden hidden;
 }

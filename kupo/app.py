@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from rich.align import Align
+from rich.columns import Columns
 from rich.console import RenderableType, Console, ConsoleOptions, RenderResult
 from rich.markup import escape
 from rich.padding import Padding
@@ -38,15 +39,13 @@ def convert_size(size_bytes):
 def octal_to_string(octal):
     result = ""
     value_letters = [(4, "r"), (2, "w"), (1, "x")]
-    # Iterate over each of the digits in octal
     for digit in [int(n) for n in str(octal)]:
-        # Check for each of the permissions values
         for value, letter in value_letters:
             if digit >= value:
                 result += letter
                 digit -= value
             else:
-                result += '-'
+                result += "-"
     return result
 
 
@@ -66,22 +65,12 @@ class DirectoryListRenderable:
         table = Table.grid(expand=True)
         table.add_column()
         table.add_column(justify="right")
-        num_files = len(self.files)
 
-        total_size_bytes = 0
-        for file in self.files:
-            try:
-                total_size_bytes += file.stat().st_size
-            except OSError:
-                pass
-        table.add_row(Padding(f"{num_files} items", pad=(0, 1)),
-                      convert_size(total_size_bytes),
-                      style="white on #1c3663")
         for index, file in enumerate(self.files):
             if index == self.selected_index:
-                style = "bold white on blue"
+                style = "bold white on #1E90FF"
             elif file.is_dir():
-                style = "cyan"
+                style = "#1E90FF"
             else:
                 style = ""
 
@@ -94,19 +83,40 @@ class DirectoryListRenderable:
         yield table
 
 
+class DirectoryListHeader(Widget, can_focus=False):
+
+    num_files = Reactive(0)
+    total_size_bytes = Reactive(0)
+
+    def __init__(self, num_files: int, total_size_bytes: int, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.num_files = num_files
+        self.total_size_bytes = total_size_bytes
+
+    def render(self) -> RenderableType:
+        return Columns([
+            f"{self.num_files} items",
+            Align.right(convert_size(self.total_size_bytes)),
+        ], expand=True)
+
+
+
 class DirectoryList(Widget, can_focus=True):
     selected_index = Reactive(0)
     has_focus = Reactive(False)
 
-    def __init__(self, *children: Widget, path: Path,
+    def __init__(self, path: Path,
                  initial_active_file: Path | None = None,
                  **kwargs):
-        super().__init__(*children, **kwargs)
+        super().__init__(**kwargs)
         self.path = path
         self.files: list[Path] = [file for file in list_files_in_dir(self.path)]
         self.initial_active_file = initial_active_file
         if initial_active_file:
             self.highlight_file(initial_active_file)
+
+    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+        return len(self.files) + 1
 
     def on_focus(self, event: events.Focus):
         self.has_focus = True
@@ -145,7 +155,7 @@ class DirectoryList(Widget, can_focus=True):
         return DirectoryListRenderable(self.files, self.selected_index)
 
 
-class AppHeader(Widget):
+class AppHeader(Widget, can_focus=False):
     def __init__(self, current_path: Path, *children: Widget, **kwargs):
         self.current_path = current_path
         super().__init__(*children, **kwargs)
@@ -155,28 +165,28 @@ class AppHeader(Widget):
         self.refresh(layout=True)
 
     def render(self) -> RenderableType:
-        return Padding(
+        logo = "⌒ ● ⌒"
+        current_path = Align.right(
             Text.assemble(Text(f"{self.current_path.parent}{os.path.sep}"),
-                          Text(f"{self.current_path.name}", style="bold")),
-            pad=(0, 1),
-        )
+                          Text(f"{self.current_path.name}", style="bold")))
+        return Columns([logo, current_path], expand=True)
 
 
-class AppFooter(Widget):
+class AppFooter(Widget, can_focus=False):
     def __init__(self, current_path: Path, *children: Widget, **kwargs):
         self.current_path = current_path
         super().__init__(*children, **kwargs)
 
     def new_selected_path(self, path: Path):
         self.current_path = path
+        self.stat = self.current_path.stat()
         self.refresh(layout=True)
 
     def render(self) -> RenderableType:
         name = self.current_path.name
-        st_mode = self.current_path.stat().st_mode
-        st_mode = octal_to_string(st_mode)
+        st_mode = octal_to_string(self.stat.st_mode)
         owner = self.current_path.owner()
-        date_modified = datetime.fromtimestamp(self.current_path.stat().st_ctime)
+        date_modified = datetime.fromtimestamp(self.stat.st_ctime)
         table = Table.grid(expand=True)
         table.add_column()
         table.add_column()
@@ -236,9 +246,10 @@ class FilePreview(Widget):
 
     def new_selected_path(self, path: Path):
         self.current_path = path
-        print(path, path.is_file())
         if path.is_file():
             self.file_content = read_text_from_path(path)
+        else:
+            self.file_content = ""
         self.refresh(layout=True)  # Layout required for changes in height
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
@@ -291,6 +302,7 @@ class FilesApp(App):
         self.bind("G", "bottom_of_file", "Bottom Of File")
         self.bind("?", "help", "Help")
         self.bind("/", "focus('this_directory_search')")
+        self.bind("escape", "focus('this_directory')")
 
     def on_mount(self):
         self.dark = True
@@ -300,6 +312,7 @@ class FilesApp(App):
             id="parent_directory",
             initial_active_file=self.selected_path.parent,
         )
+
         self.this_directory = DirectoryList(
             path=self.selected_path.parent,
             id="this_directory",
@@ -309,10 +322,14 @@ class FilesApp(App):
                                         id="file_preview_content")
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
 
-        this_directory_search = TextInput(placeholder="Press / to search files", id="this_directory_search")
+        this_directory_search = TextInput(placeholder="Press / to search files",
+                                          id="this_directory_search")
+
+        self.this_directory_header = DirectoryListHeader(0, 0, classes="directory_list_header", id="this_directory_header")
         self.body_wrapper = Widget(
-            self.parent_directory,
+            Widget(self.parent_directory, id="parent_directory_wrapper"),
             Widget(
+                self.this_directory_header,
                 self.this_directory,
                 this_directory_search,
                 id="this_directory_wrapper",
@@ -337,10 +354,23 @@ class FilesApp(App):
     def _update_ui_new_selected_path(self):
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
+
+
         self.this_directory.update_files(
             directory=self.selected_path.parent,
             active_path=self.selected_path,
         )
+
+        parent_dir = list(self.selected_path.parent.iterdir())
+        parent_dir_total_size_bytes = 0
+        for file in parent_dir:
+            try:
+                parent_dir_total_size_bytes += file.stat().st_size
+            except OSError:
+                pass
+        self.this_directory_header.num_files = len(parent_dir)
+        self.this_directory_header.total_size_bytes = parent_dir_total_size_bytes
+
         self.parent_directory.update_files(
             directory=self.selected_path.parent.parent,
             active_path=self.selected_path.parent,
@@ -389,7 +419,8 @@ def get_install_directory() -> Path:
 
 def run_develop():
     directory = get_install_directory()
-    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log", watch_css=True)
+    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log",
+                   watch_css=True)
     app.run()
 
 
