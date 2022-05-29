@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import math
 import os.path
+import string
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -19,7 +20,7 @@ from rich.text import Text
 from textual import events
 from textual._types import MessageTarget
 from textual.app import App
-from textual.geometry import Size
+from textual.geometry import Size, clamp
 from textual.message import Message
 from textual.reactive import Reactive
 from textual.widget import Widget
@@ -131,13 +132,21 @@ class DirectoryList(Widget, can_focus=True):
     def on_blur(self, event: events.Blur):
         self.has_focus = False
 
-    async def move_down(self):
-        self.selected_index = max(0, self.selected_index - 1)
-        await self._report_active_path()
+    def on_key(self, event: events.Key) -> None:
+        if event.key in string.digits:
+            key = int(event.key)
+            if key == 0:
+                key = 10
+            self.selected_index = clamp(key - 1, 0, len(self.files) - 1)
+            self._report_active_path()
 
-    async def move_up(self):
+    def move_down(self):
+        self.selected_index = max(0, self.selected_index - 1)
+        self._report_active_path()
+
+    def move_up(self):
         self.selected_index = min(len(self.files) - 1, self.selected_index + 1)
-        await self._report_active_path()
+        self._report_active_path()
 
     def update_files(self, directory: Path, active_path: Path | None = None):
         self.files = list(
@@ -154,9 +163,9 @@ class DirectoryList(Widget, can_focus=True):
             index = 0
         self.selected_index = index
 
-    async def _report_active_path(self) -> None:
+    def _report_active_path(self) -> None:
         path = self.files[self.selected_index]
-        await self.emit(SelectedPath(path, sender=self))
+        self.emit_no_wait(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
         return DirectoryListRenderable(self.files, self.selected_index, filter=self.filter)
@@ -385,11 +394,11 @@ class FilesApp(App):
         self.preview_wrapper.scroll_home(animate=False)
         self.refresh(layout=True)
 
-    async def action_next_file(self) -> None:
-        await self.this_directory.move_up()
+    def action_next_file(self) -> None:
+        self.this_directory.move_up()
 
-    async def action_prev_file(self) -> None:
-        await self.this_directory.move_down()
+    def action_prev_file(self) -> None:
+        self.this_directory.move_down()
 
     def action_goto_parent(self) -> None:
         self.selected_path = self.selected_path.parent
