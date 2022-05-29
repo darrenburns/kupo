@@ -18,6 +18,7 @@ from rich.text import Text
 from textual import events
 from textual._types import MessageTarget
 from textual.app import App
+from textual.geometry import Size
 from textual.message import Message
 from textual.reactive import Reactive
 from textual.widget import Widget
@@ -219,37 +220,51 @@ def read_text_from_path(path: Path) -> str:
 
 
 class FilePreview(Widget):
-    def __init__(self, *children: Widget, current_path: Path, **kwargs):
+    def __init__(
+        self,
+        current_path: Path,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+    ):
         self.current_path = current_path
-        super().__init__(*children, **kwargs)
+        if current_path.is_file():
+            self.file_content = read_text_from_path(current_path)
+        else:
+            self.file_content = ""
+        super().__init__(name=name, id=id, classes=classes)
 
     def new_selected_path(self, path: Path):
         self.current_path = path
-        self.refresh(layout=True)
+        print(path, path.is_file())
+        if path.is_file():
+            self.file_content = read_text_from_path(path)
+        self.refresh(layout=True)  # Layout required for changes in height
+
+    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+        if self.file_content:
+            return len(self.file_content.splitlines())
+        return super().get_content_height(container, viewport, width)
 
     def render(self) -> RenderableType:
         if self.current_path.is_file():
-            file_content = read_text_from_path(self.current_path)
+            self.file_content = read_text_from_path(self.current_path)
             file_name = self.current_path.name
             preview = Syntax(
-                code=file_content,
+                code=self.file_content,
                 lexer=Syntax.guess_lexer(file_name),
                 theme="monokai" if self.app.dark else "manni",
                 line_numbers=True,
                 indent_guides=True,
                 background_color="#111111" if self.app.dark else "#f0f0f0"
             )
-            self.styles.height = float(len(preview.code.splitlines()) + 1)
         elif self.current_path.is_dir():
             files = list_files_in_dir(self.current_path)
             preview = DirectoryListRenderable(files=files, selected_index=None)
-            self.styles.height = float(len(files) + 1)
         else:
             preview = Emptiness()
-            self.styles.height = float(self.console.options.height)
 
         preview = Padding(preview, pad=0)
-        self.refresh(layout=True)
         return preview
 
 
@@ -276,7 +291,7 @@ class FilesApp(App):
         self.bind("G", "bottom_of_file", "Bottom Of File")
         self.bind("?", "help", "Help")
 
-    async def on_mount(self):
+    def on_mount(self):
         self.dark = True
 
         self.selected_path = next(Path.cwd().iterdir(), Path.cwd())
@@ -307,15 +322,15 @@ class FilesApp(App):
             footer=self.footer,
         )
         self.set_focus(self.this_directory)
-        await self._update_ui_new_selected_path()
+        self._update_ui_new_selected_path()
 
-    async def handle_selected_path(self, message: SelectedPath):
+    def handle_selected_path(self, message: SelectedPath):
         path = message.path
         self.selected_path = path
         self.file_preview.new_selected_path(path)
-        await self._update_ui_new_selected_path()
+        self._update_ui_new_selected_path()
 
-    async def _update_ui_new_selected_path(self):
+    def _update_ui_new_selected_path(self):
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
         self.this_directory.update_files(
@@ -330,26 +345,23 @@ class FilesApp(App):
         self.preview_wrapper.scroll_home(animate=False)
         self.refresh(layout=True)
 
-    async def on_key(self, event) -> None:
-        await self.dispatch_key(event)
-
     async def action_next_file(self) -> None:
         await self.this_directory.move_up()
 
     async def action_prev_file(self) -> None:
         await self.this_directory.move_down()
 
-    async def action_goto_parent(self) -> None:
+    def action_goto_parent(self) -> None:
         self.selected_path = self.selected_path.parent
-        await self._update_ui_new_selected_path()
+        self._update_ui_new_selected_path()
 
-    async def action_choose_path(self) -> None:
+    def action_choose_path(self) -> None:
         self.log(self.selected_path)
         if self.selected_path.is_dir():
             files_in_dir = sorted(list_files_in_dir(self.selected_path),
                                   key=lambda f: (not f.is_dir(), f.name))
             self.selected_path = next(iter(files_in_dir), self.selected_path)
-        await self._update_ui_new_selected_path()
+        self._update_ui_new_selected_path()
 
     async def action_toggle_dark(self):
         self.dark = not self.dark

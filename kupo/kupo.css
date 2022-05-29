@@ -42,6 +42,7 @@ Screen {
 #file_preview_content {
     color: $text-surface;
     background: $surface;
+    height: auto;
 }
 
 #this_directory {
