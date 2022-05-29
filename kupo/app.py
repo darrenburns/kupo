@@ -191,7 +191,7 @@ class AppFooter(Widget, can_focus=False):
 
     def render(self) -> RenderableType:
         name = self.current_path.name
-        st_mode = octal_to_string(self.stat.st_mode)
+        st_mode = str(self.stat.st_mode)
         owner = self.current_path.owner()
         date_modified = datetime.fromtimestamp(self.stat.st_ctime)
         table = Table.grid(expand=True)
