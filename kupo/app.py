@@ -56,9 +56,10 @@ class SelectedPath(Message, bubble=True):
 
 
 class DirectoryListRenderable:
-    def __init__(self, files: list[Path], selected_index: int | None) -> None:
+    def __init__(self, files: list[Path], selected_index: int | None, filter: str = "") -> None:
         self.files = files
         self.selected_index = selected_index
+        self.filter = filter
 
     def __rich_console__(self, console: Console,
                          options: ConsoleOptions) -> RenderResult:
@@ -77,7 +78,12 @@ class DirectoryListRenderable:
             file_name = escape(file.name)
             if file.is_dir():
                 file_name += "/"
-            table.add_row(Padding(file_name, pad=(0, 1)),
+
+            file_name = Text(file_name)
+            if self.filter:
+                file_name.highlight_regex(self.filter, "on yellow")
+
+            table.add_row(file_name,
                           convert_size(file.stat().st_size),
                           style=style)
         yield table
@@ -104,6 +110,7 @@ class DirectoryListHeader(Widget, can_focus=False):
 class DirectoryList(Widget, can_focus=True):
     selected_index = Reactive(0)
     has_focus = Reactive(False)
+    filter = Reactive("")
 
     def __init__(self, path: Path,
                  initial_active_file: Path | None = None,
@@ -152,7 +159,7 @@ class DirectoryList(Widget, can_focus=True):
         await self.emit(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
-        return DirectoryListRenderable(self.files, self.selected_index)
+        return DirectoryListRenderable(self.files, self.selected_index, filter=self.filter)
 
 
 class AppHeader(Widget, can_focus=False):
@@ -201,7 +208,6 @@ class AppFooter(Widget, can_focus=False):
 
 
 class Emptiness:
-
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
@@ -322,7 +328,7 @@ class FilesApp(App):
                                         id="file_preview_content")
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
 
-        this_directory_search = TextInput(placeholder="Press / to search files",
+        self.this_directory_search = TextInput(placeholder="Press / to search files",
                                           id="this_directory_search")
 
         self.this_directory_header = DirectoryListHeader(0, 0, classes="directory_list_header", id="this_directory_header")
@@ -331,7 +337,7 @@ class FilesApp(App):
             Widget(
                 self.this_directory_header,
                 self.this_directory,
-                this_directory_search,
+                self.this_directory_search,
                 id="this_directory_wrapper",
             ),
             self.preview_wrapper,
@@ -411,6 +417,11 @@ class FilesApp(App):
         self.file_preview.new_selected_path(
             get_install_directory() / "kupo_commands.md"
         )
+
+    def handle_changed(self, event: TextInput.Changed) -> None:
+        if event.sender is self.this_directory_search:
+            print("EVENT:", event.value, type(event.value))
+            self.this_directory.filter = event.value
 
 
 def get_install_directory() -> Path:
