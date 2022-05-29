@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import math
 import os.path
+import re
 import string
 import sys
 from datetime import datetime
@@ -11,6 +12,7 @@ from pathlib import Path
 from rich.align import Align
 from rich.columns import Columns
 from rich.console import RenderableType, Console, ConsoleOptions, RenderResult
+from rich.constrain import Constrain
 from rich.markup import escape
 from rich.padding import Padding
 from rich.segment import Segment
@@ -57,7 +59,8 @@ class SelectedPath(Message, bubble=True):
 
 
 class DirectoryListRenderable:
-    def __init__(self, files: list[Path], selected_index: int | None, filter: str = "") -> None:
+    def __init__(self, files: list[Path], selected_index: int | None,
+                 filter: str = "") -> None:
         self.files = files
         self.selected_index = selected_index
         self.filter = filter
@@ -91,7 +94,6 @@ class DirectoryListRenderable:
 
 
 class DirectoryListHeader(Widget, can_focus=False):
-
     num_files = Reactive(0)
     total_size_bytes = Reactive(0)
 
@@ -101,11 +103,13 @@ class DirectoryListHeader(Widget, can_focus=False):
         self.total_size_bytes = total_size_bytes
 
     def render(self) -> RenderableType:
+        size_bg = self.app.get_css_variables()["accent-darken-2"]
         return Columns([
-            f"{self.num_files} items",
-            Align.right(convert_size(self.total_size_bytes)),
+            Padding(f"{self.num_files} items", pad=(0, 1)),
+            Align.right(
+                Padding(convert_size(self.total_size_bytes), style=f"on {size_bg}",
+                        pad=(0, 1))),
         ], expand=True)
-
 
 
 class DirectoryList(Widget, can_focus=True):
@@ -168,12 +172,36 @@ class DirectoryList(Widget, can_focus=True):
         self.emit_no_wait(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
-        return DirectoryListRenderable(self.files, self.selected_index, filter=self.filter)
+        return DirectoryListRenderable(self.files, self.selected_index,
+                                       filter=self.filter)
+
+
+class DirectorySearchInfo(Widget, can_focus=False):
+    num_results = Reactive(0)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.success_colour= self.app.get_css_variables()["success"]
+
+    def watch_num_results(self, value: int) -> None:
+        if value == 0:
+            self.styles.display = "none"
+        else:
+            self.styles.display = "block"
+
+    def render(self) -> RenderableType:
+        if self.num_results == 1:
+            return Text(f"Press ⏎ to select match", style=f"bold {self.success_colour}")
+        else:
+            return Text(f"{self.num_results} matches")
 
 
 class AppHeader(Widget, can_focus=False):
     def __init__(self, current_path: Path, *children: Widget, **kwargs):
         self.current_path = current_path
+        darken_bg = self.app.get_css_variables()["accent-darken-2"]
+        self.logo = Text.from_markup(f"[on {darken_bg}] ⌒ ● ⌒ ")
+
         super().__init__(*children, **kwargs)
 
     def new_selected_path(self, path: Path):
@@ -181,11 +209,10 @@ class AppHeader(Widget, can_focus=False):
         self.refresh(layout=True)
 
     def render(self) -> RenderableType:
-        logo = "⌒ ● ⌒"
         current_path = Align.right(
             Text.assemble(Text(f"{self.current_path.parent}{os.path.sep}"),
                           Text(f"{self.current_path.name}", style="bold")))
-        return Columns([logo, current_path], expand=True)
+        return Columns([self.logo, current_path], expand=True)
 
 
 class AppFooter(Widget, can_focus=False):
@@ -282,15 +309,17 @@ class FilePreview(Widget):
                 theme="monokai" if self.app.dark else "manni",
                 line_numbers=True,
                 indent_guides=True,
-                background_color="#111111" if self.app.dark else "#f0f0f0"
+                background_color="#111111" if self.app.dark else "#f0f0f0",
             )
         elif self.current_path.is_dir():
             files = list_files_in_dir(self.current_path)
-            preview = DirectoryListRenderable(files=files, selected_index=None)
+            preview = DirectoryListRenderable(
+                files=files,
+                selected_index=None,
+            )
         else:
             preview = Emptiness()
 
-        preview = Padding(preview, pad=0)
         return preview
 
 
@@ -338,15 +367,20 @@ class FilesApp(App):
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
 
         self.this_directory_search = TextInput(placeholder="Press / to search",
-                                          id="this_directory_search")
+                                               id="this_directory_search")
 
-        self.this_directory_header = DirectoryListHeader(0, 0, classes="directory_list_header", id="this_directory_header")
+        self.this_directory_search_info = DirectorySearchInfo(id="this_directory_search_info")
+
+        self.this_directory_header = DirectoryListHeader(0, 0,
+                                                         classes="directory_list_header",
+                                                         id="this_directory_header")
         self.body_wrapper = Widget(
             Widget(self.parent_directory, id="parent_directory_wrapper"),
             Widget(
                 self.this_directory_header,
                 self.this_directory,
                 self.this_directory_search,
+                self.this_directory_search_info,
                 id="this_directory_wrapper",
             ),
             self.preview_wrapper,
@@ -369,7 +403,6 @@ class FilesApp(App):
     def _update_ui_new_selected_path(self):
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
-
 
         self.this_directory.update_files(
             directory=self.selected_path.parent,
@@ -430,6 +463,16 @@ class FilesApp(App):
     def handle_changed(self, event: TextInput.Changed) -> None:
         if event.sender is self.this_directory_search:
             self.this_directory.filter = event.value
+
+            # Find the number of files that match the regex
+            if event.value:
+                num_results = 0
+                for file in list_files_in_dir(self.selected_path.parent):
+                    if re.search(event.value, file.name):
+                        num_results += 1
+                self.this_directory_search_info.num_results = num_results
+            else:
+                self.this_directory_search_info.num_results = 0
 
 
 def get_install_directory() -> Path:

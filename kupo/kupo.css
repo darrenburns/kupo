@@ -44,6 +44,7 @@ Screen {
     color: $text-surface;
     background: $surface;
     height: auto;
+    width: auto;
 }
 
 #this_directory_wrapper {
@@ -65,6 +66,14 @@ Screen {
     background: $surface-darken-1;
     border-left: heavy $accent;
     border-right: heavy $accent;
+}
+
+#this_directory_search_info {
+    dock: tdwbot;
+    height: 1;
+    padding-left: 2;
+    background: $surface-darken-1;
+    display: none;
 }
 
 #this_directory_search {
@@ -89,7 +98,6 @@ Screen {
 
 .directory_list_header {
     height: 1;
-    padding: 0 1;
     background: $accent-darken-1;
 }
 
