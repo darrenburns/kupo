@@ -22,6 +22,7 @@ from textual.geometry import Size
 from textual.message import Message
 from textual.reactive import Reactive
 from textual.widget import Widget
+from textual.widgets.text_input import TextInput
 
 
 def convert_size(size_bytes):
@@ -127,7 +128,6 @@ class DirectoryList(Widget, can_focus=True):
                    key=lambda p: (not p.is_dir(), p.name)))
         if active_path:
             self.highlight_file(active_path)
-        self.styles.height = float(len(self.files))
         self.refresh(layout=True)
 
     def highlight_file(self, path):
@@ -142,7 +142,7 @@ class DirectoryList(Widget, can_focus=True):
         await self.emit(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
-        return Padding(DirectoryListRenderable(self.files, self.selected_index), pad=0)
+        return DirectoryListRenderable(self.files, self.selected_index)
 
 
 class AppHeader(Widget):
@@ -290,12 +290,11 @@ class FilesApp(App):
         self.bind("g", "top_of_file", "Top Of File")
         self.bind("G", "bottom_of_file", "Bottom Of File")
         self.bind("?", "help", "Help")
+        self.bind("/", "focus('this_directory_search')")
 
     def on_mount(self):
         self.dark = True
-
         self.selected_path = next(Path.cwd().iterdir(), Path.cwd())
-
         self.parent_directory = DirectoryList(
             path=self.selected_path.parent.parent,
             id="parent_directory",
@@ -305,13 +304,19 @@ class FilesApp(App):
             path=self.selected_path.parent,
             id="this_directory",
         )
-
+        self.this_directory.focus()
         self.file_preview = FilePreview(current_path=self.selected_path,
                                         id="file_preview_content")
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
+
+        this_directory_search = TextInput(placeholder="Press / to search files", id="this_directory_search")
         self.body_wrapper = Widget(
             self.parent_directory,
-            self.this_directory,
+            Widget(
+                self.this_directory,
+                this_directory_search,
+                id="this_directory_wrapper",
+            ),
             self.preview_wrapper,
         )
         self.header = AppHeader(current_path=self.selected_path.parent)
@@ -321,7 +326,6 @@ class FilesApp(App):
             body_wrapper=self.body_wrapper,
             footer=self.footer,
         )
-        self.set_focus(self.this_directory)
         self._update_ui_new_selected_path()
 
     def handle_selected_path(self, message: SelectedPath):
@@ -385,7 +389,7 @@ def get_install_directory() -> Path:
 
 def run_develop():
     directory = get_install_directory()
-    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log")
+    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log", watch_css=True)
     app.run()
 
 

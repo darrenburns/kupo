@@ -10,18 +10,16 @@ Screen {
     height: 1;
     color: $text-accent;
     background: $accent;
-    width: 100%;
 }
 
 #footer {
     height: 1;
     color: $text-accent;
     background: $accent;
-    width: 100%;
 }
 
 .empty_space {
-    color: $primary;
+    color: $surface;
 }
 
 #body_wrapper {
@@ -45,16 +43,43 @@ Screen {
     height: auto;
 }
 
-#this_directory {
+#this_directory_wrapper {
     dock: lhs;
-    border-right: vkey $accent;
+    layout: dock;
+    docks: tdwtop=top tdwbot=bottom;
     color: $text-surface;
     background: $surface;
 }
 
+#this_directory {
+    height: auto;
+    dock: tdwtop;
+    border-left: heavy $primary-darken-2;
+    border-right: heavy $primary-darken-2;
+}
+
+#this_directory:focus {
+    background: $surface-darken-1;
+    border-left: heavy $accent;
+    border-right: heavy $accent;
+}
+
+#this_directory_search {
+    dock: tdwbot;
+    border-left: transparent;
+    border-right: transparent;
+    background: $surface;
+    height: 1;
+}
+
+#this_directory_search:focus {
+    background: $surface-darken-1;
+    border-left: heavy $accent;
+    border-right: heavy $accent;
+}
+
 #parent_directory {
     dock: lhs;
-    border-right: vkey $accent;
     color: $text-surface;
     background: $surface;
 }
