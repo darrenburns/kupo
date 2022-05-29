@@ -328,7 +328,7 @@ class FilesApp(App):
                                         id="file_preview_content")
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
 
-        self.this_directory_search = TextInput(placeholder="Press / to search files",
+        self.this_directory_search = TextInput(placeholder="Press / to search",
                                           id="this_directory_search")
 
         self.this_directory_header = DirectoryListHeader(0, 0, classes="directory_list_header", id="this_directory_header")
@@ -420,7 +420,6 @@ class FilesApp(App):
 
     def handle_changed(self, event: TextInput.Changed) -> None:
         if event.sender is self.this_directory_search:
-            print("EVENT:", event.value, type(event.value))
             self.this_directory.filter = event.value
 
 
