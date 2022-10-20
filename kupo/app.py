@@ -12,10 +12,10 @@ from pathlib import Path
 from rich.align import Align
 from rich.columns import Columns
 from rich.console import RenderableType, Console, ConsoleOptions, RenderResult
-from rich.constrain import Constrain
 from rich.markup import escape
 from rich.padding import Padding
 from rich.segment import Segment
+from rich.style import Style
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
@@ -26,7 +26,6 @@ from textual.geometry import Size, clamp
 from textual.message import Message
 from textual.reactive import Reactive
 from textual.widget import Widget
-from textual.widgets.text_input import TextInput
 
 
 def convert_size(size_bytes):
@@ -59,37 +58,38 @@ class SelectedPath(Message, bubble=True):
 
 
 class DirectoryListRenderable:
-    def __init__(self, files: list[Path], selected_index: int | None,
-                 filter: str = "") -> None:
+    def __init__(
+        self, files: list[Path], selected_index: int | None, filter: str = ""
+    ) -> None:
         self.files = files
         self.selected_index = selected_index
         self.filter = filter
 
-    def __rich_console__(self, console: Console,
-                         options: ConsoleOptions) -> RenderResult:
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
         table = Table.grid(expand=True)
         table.add_column()
         table.add_column(justify="right")
 
         for index, file in enumerate(self.files):
-            if index == self.selected_index:
-                style = "bold white on #1E90FF"
-            elif file.is_dir():
-                style = "#1E90FF"
-            else:
-                style = ""
+            if not self.filter or (self.filter and re.search(self.filter, file.name)):
+                if index == self.selected_index:
+                    style = "bold white on #1E90FF"
+                elif file.is_dir():
+                    style = "#1E90FF"
+                else:
+                    style = ""
 
-            file_name = escape(file.name)
-            if file.is_dir():
-                file_name += "/"
+                file_name = escape(file.name)
+                if file.is_dir():
+                    file_name += "/"
 
-            file_name = Text(file_name)
-            if self.filter:
-                file_name.highlight_regex(self.filter, "on yellow")
+                file_name = Text(file_name)
+                if self.filter:
+                    file_name.highlight_regex(self.filter, "#191004 on #FEA62B")
 
-            table.add_row(file_name,
-                          convert_size(file.stat().st_size),
-                          style=style)
+                table.add_row(file_name, convert_size(file.stat().st_size), style=style)
         yield table
 
 
@@ -104,12 +104,19 @@ class DirectoryListHeader(Widget, can_focus=False):
 
     def render(self) -> RenderableType:
         size_bg = self.app.get_css_variables()["accent-darken-2"]
-        return Columns([
-            Padding(f"{self.num_files} items", pad=(0, 1)),
-            Align.right(
-                Padding(convert_size(self.total_size_bytes), style=f"on {size_bg}",
-                        pad=(0, 1))),
-        ], expand=True)
+        return Columns(
+            [
+                Padding(f"{self.num_files} items", pad=(0, 1)),
+                Align.right(
+                    Padding(
+                        convert_size(self.total_size_bytes),
+                        style=f"on {size_bg}",
+                        pad=(0, 1),
+                    )
+                ),
+            ],
+            expand=True,
+        )
 
 
 class DirectoryList(Widget, can_focus=True):
@@ -117,18 +124,21 @@ class DirectoryList(Widget, can_focus=True):
     has_focus = Reactive(False)
     filter = Reactive("")
 
-    def __init__(self, path: Path,
-                 initial_active_file: Path | None = None,
-                 **kwargs):
+    def __init__(self, path: Path, initial_active_file: Path | None = None, **kwargs):
         super().__init__(**kwargs)
         self.path = path
-        self.files: list[Path] = [file for file in list_files_in_dir(self.path)]
+        self.files: list[Path] = self._list_files(path)
         self.initial_active_file = initial_active_file
         if initial_active_file:
             self.highlight_file(initial_active_file)
 
+    def _list_files(self, path: Path) -> list[Path]:
+        return list(
+            sorted(list_files_in_dir(path), key=lambda p: (not p.is_dir(), p.name))
+        )
+
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return len(self.files) + 1
+        return len(self.files)
 
     def on_focus(self, event: events.Focus):
         self.has_focus = True
@@ -141,24 +151,53 @@ class DirectoryList(Widget, can_focus=True):
             key = int(event.key)
             if key == 0:
                 key = 10
-            self.selected_index = clamp(key - 1, 0, len(self.files) - 1)
+            self.selected_index = self._clamp_selected_index(key - 1)
             self._report_active_path()
 
     def move_down(self):
-        self.selected_index = max(0, self.selected_index - 1)
+        self.selected_index = max(
+            0, self._clamp_selected_index(self.selected_index - 1)
+        )
         self._report_active_path()
 
     def move_up(self):
-        self.selected_index = min(len(self.files) - 1, self.selected_index + 1)
+        self.selected_index = min(
+            len(self.files) - 1, self._clamp_selected_index(self.selected_index + 1)
+        )
         self._report_active_path()
 
+    def _clamp_selected_index(self, index: int) -> int:
+        """Ensures the selected file index is always valid"""
+        return clamp(index, 0, len(self.files) - 1)
+
     def update_files(self, directory: Path, active_path: Path | None = None):
-        self.files = list(
-            sorted(list_files_in_dir(directory),
-                   key=lambda p: (not p.is_dir(), p.name)))
+
+        self.files = self._list_files(directory)
+        self._filter_files(self.filter)
         if active_path:
             self.highlight_file(active_path)
         self.refresh(layout=True)
+
+    def watch_filter(self, value: str) -> None:
+        self.files = self._list_files(self.path)
+        if value:
+            self._filter_files(value)
+
+        print(f"watch_filter {value} new files: {self.files}")
+        self.selected_index = self._clamp_selected_index(self.selected_index)
+
+    def _filter_files(self, filter: str) -> None:
+        files_to_display = []
+        for file in self.files:
+            try:
+                match = re.search(filter, file.name)
+            except Exception:
+                match = None
+            if not filter or (filter and match):
+                files_to_display.append(file)
+
+        print(f"_filter_files {files_to_display}")
+        self.files = files_to_display
 
     def highlight_file(self, path):
         try:
@@ -168,32 +207,70 @@ class DirectoryList(Widget, can_focus=True):
         self.selected_index = index
 
     def _report_active_path(self) -> None:
-        path = self.files[self.selected_index]
-        self.emit_no_wait(SelectedPath(path, sender=self))
+        if len(self.files) > 0:
+            path = self.files[self.selected_index]
+            self.emit_no_wait(SelectedPath(path, sender=self))
 
     def render(self) -> RenderableType:
-        return DirectoryListRenderable(self.files, self.selected_index,
-                                       filter=self.filter)
+        return DirectoryListRenderable(
+            self.files, self.selected_index, filter=self.filter
+        )
 
 
 class DirectorySearchInfo(Widget, can_focus=False):
-    num_results = Reactive(0)
+    matching_files = Reactive([], layout=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.success_colour= self.app.get_css_variables()["success"]
+        self.css_variables = self.app.get_css_variables()
+        self.success_colour = self.css_variables["success"]
+        self.danger_colour = self.css_variables["error"]
 
-    def watch_num_results(self, value: int) -> None:
-        if value == 0:
-            self.styles.display = "none"
-        else:
+    def watch_matching_files(self, value) -> None:
+        if value is not None:
             self.styles.display = "block"
+        else:
+            self.styles.display = "none"
+
+    def _success_styles(self):
+        self.styles.height = 2
+        success_border_edge = ("heavy", self.success_colour)
+        self.styles.border_left = success_border_edge
+        self.styles.border_right = success_border_edge
+
+    def _danger_styles(self):
+        self.styles.height = 1
+        danger_border_edge = ("heavy", self.danger_colour)
+        self.styles.border_left = danger_border_edge
+        self.styles.border_right = danger_border_edge
+
+    def _neutral_styles(self):
+        self.styles.height = 1
+        border_edge = ("heavy", "transparent")
+        self.styles.border_left = border_edge
+        self.styles.border_right = border_edge
 
     def render(self) -> RenderableType:
-        if self.num_results == 1:
-            return Text(f"Press ⏎ to select match", style=f"bold {self.success_colour}")
+        if self.matching_files is None:
+            self._neutral_styles()
+            return Text("")
+
+        num_matches = len(self.matching_files)
+        if num_matches == 1:
+            self._success_styles()
+            return Text.assemble(
+                (f"Press ⏎ to select file:\n ", f"bold {self.success_colour}"),
+                (self.matching_files[0].name, self.success_colour),
+            )
+        elif num_matches == 0:
+            self._danger_styles()
+            return Text("No matching files", style=f"bold {self.danger_colour}")
         else:
-            return Text(f"{self.num_results} matches")
+            self._neutral_styles()
+            return Text.assemble(
+                (str(num_matches), Style(bold=True, dim=True)),
+                (" matching files", Style(dim=True)),
+            )
 
 
 class AppHeader(Widget, can_focus=False):
@@ -210,8 +287,11 @@ class AppHeader(Widget, can_focus=False):
 
     def render(self) -> RenderableType:
         current_path = Align.right(
-            Text.assemble(Text(f"{self.current_path.parent}{os.path.sep}"),
-                          Text(f"{self.current_path.name}", style="bold")))
+            Text.assemble(
+                Text(f"{self.current_path.parent}{os.path.sep}"),
+                Text(f"{self.current_path.name}", style="bold"),
+            )
+        )
         return Columns([self.logo, current_path], expand=True)
 
 
@@ -254,7 +334,6 @@ class Emptiness:
 
 
 class EmptySpace(Widget):
-
     def __init__(self, *children: Widget, **kwargs):
         super().__init__(*children)
         self.add_class("empty_space")
@@ -346,6 +425,7 @@ class FilesApp(App):
         self.bind("G", "bottom_of_file", "Bottom Of File")
         self.bind("?", "help", "Help")
         self.bind("/", "focus('this_directory_search')")
+        self.bind("ctrl+x", "dump_state")
         self.bind("escape", "focus('this_directory')")
 
     def on_mount(self):
@@ -362,18 +442,22 @@ class FilesApp(App):
             id="this_directory",
         )
         self.this_directory.focus()
-        self.file_preview = FilePreview(current_path=self.selected_path,
-                                        id="file_preview_content")
+        self.file_preview = FilePreview(
+            current_path=self.selected_path, id="file_preview_content"
+        )
         self.preview_wrapper = Widget(self.file_preview, id="file_preview_wrapper")
 
-        self.this_directory_search = TextInput(placeholder="Press / to search",
-                                               id="this_directory_search")
+        self.this_directory_search = TextInput(
+            placeholder="Press / to search", id="this_directory_search"
+        )
 
-        self.this_directory_search_info = DirectorySearchInfo(id="this_directory_search_info")
+        self.this_directory_search_info = DirectorySearchInfo(
+            id="this_directory_search_info"
+        )
 
-        self.this_directory_header = DirectoryListHeader(0, 0,
-                                                         classes="directory_list_header",
-                                                         id="this_directory_header")
+        self.this_directory_header = DirectoryListHeader(
+            0, 0, classes="directory_list_header", id="this_directory_header"
+        )
         self.body_wrapper = Widget(
             Widget(self.parent_directory, id="parent_directory_wrapper"),
             Widget(
@@ -401,14 +485,16 @@ class FilesApp(App):
         self._update_ui_new_selected_path()
 
     def _update_ui_new_selected_path(self):
+        # Update app header and footer
         self.header.new_selected_path(self.selected_path)
         self.footer.new_selected_path(self.selected_path)
 
+        # Update the current directory pane
         self.this_directory.update_files(
             directory=self.selected_path.parent,
             active_path=self.selected_path,
         )
-
+        # Update the header of the current directory pane
         parent_dir = list(self.selected_path.parent.iterdir())
         parent_dir_total_size_bytes = 0
         for file in parent_dir:
@@ -416,16 +502,22 @@ class FilesApp(App):
                 parent_dir_total_size_bytes += file.stat().st_size
             except OSError:
                 pass
+
         self.this_directory_header.num_files = len(parent_dir)
         self.this_directory_header.total_size_bytes = parent_dir_total_size_bytes
 
+        # Update the search info box that appears above the search box
+        self.this_directory_search_info.matching_files = parent_dir
+
+        # Update the files in the parent directory (left pane)
         self.parent_directory.update_files(
             directory=self.selected_path.parent.parent,
             active_path=self.selected_path.parent,
         )
+
+        # Update the file preview wrapper (right pane)
         self.file_preview.new_selected_path(self.selected_path)
         self.preview_wrapper.scroll_home(animate=False)
-        self.refresh(layout=True)
 
     def action_next_file(self) -> None:
         self.this_directory.move_up()
@@ -434,14 +526,23 @@ class FilesApp(App):
         self.this_directory.move_down()
 
     def action_goto_parent(self) -> None:
+        self._reset_search()
+        self.log(self.selected_path, self.selected_path.parent)
         self.selected_path = self.selected_path.parent
         self._update_ui_new_selected_path()
 
+    def _reset_search(self):
+        #  Update the value in the search box, and the applied filter
+        self.this_directory.filter = None
+        self.this_directory_search.value = ""
+
     def action_choose_path(self) -> None:
-        self.log(self.selected_path)
+        self._reset_search()
         if self.selected_path.is_dir():
-            files_in_dir = sorted(list_files_in_dir(self.selected_path),
-                                  key=lambda f: (not f.is_dir(), f.name))
+            files_in_dir = sorted(
+                list_files_in_dir(self.selected_path),
+                key=lambda f: (not f.is_dir(), f.name),
+            )
             self.selected_path = next(iter(files_in_dir), self.selected_path)
         self._update_ui_new_selected_path()
 
@@ -460,19 +561,28 @@ class FilesApp(App):
             get_install_directory() / "kupo_commands.md"
         )
 
+    def action_dump_state(self):
+        self.log(selection=self.selected_path)
+        self.log(current_filter=self.this_directory.filter)
+        self.log(filtered_files=self.this_directory.files)
+        self.log(filtered_files_length=len(self.this_directory.files))
+
     def handle_changed(self, event: TextInput.Changed) -> None:
         if event.sender is self.this_directory_search:
             self.this_directory.filter = event.value
-
             # Find the number of files that match the regex
             if event.value:
-                num_results = 0
+                matches = []
                 for file in list_files_in_dir(self.selected_path.parent):
-                    if re.search(event.value, file.name):
-                        num_results += 1
-                self.this_directory_search_info.num_results = num_results
+                    try:
+                        match = re.search(event.value, file.name)
+                    except Exception:
+                        continue
+                    if match:
+                        matches.append(file)
+                self.this_directory_search_info.matching_files = matches
             else:
-                self.this_directory_search_info.num_results = 0
+                self.this_directory_search_info.matching_files = None
 
 
 def get_install_directory() -> Path:
@@ -481,8 +591,9 @@ def get_install_directory() -> Path:
 
 def run_develop():
     directory = get_install_directory()
-    app = FilesApp(css_path=directory / "kupo.css", log_path=directory / "kupo.log",
-                   watch_css=True)
+    app = FilesApp(
+        css_path=directory / "kupo.css", log_path=directory / "kupo.log", watch_css=True
+    )
     app.run()
 
 
@@ -494,5 +605,5 @@ def run():
     run_develop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run_develop()
