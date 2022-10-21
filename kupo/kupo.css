@@ -3,16 +3,17 @@ Screen {
 }
 
 .dir-list {
-    width: 1fr;
     background: $background;
 }
 
 #current-dir {
     padding: 0 1;
+    width: 3fr;
 }
 
 #parent-dir {
     padding-left: 1;
+    width: 2fr;
 }
 
 .directory--dir {
@@ -50,7 +51,7 @@ Screen {
 }
 
 #preview-wrapper {
-    width: 2fr;
+    width: 5fr;
     scrollbar-size-vertical: 1;
     scrollbar-gutter: stable;
     scrollbar-color: $primary 60%;

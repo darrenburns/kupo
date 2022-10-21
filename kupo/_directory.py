@@ -12,7 +12,6 @@ from textual.binding import Binding
 from textual.dom import DOMNode
 from textual.geometry import clamp
 from textual.message import Message
-from textual.reactive import reactive
 from textual.widget import Widget
 
 from _files import convert_size, list_files_in_dir
@@ -90,13 +89,11 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-meta-column",
     }
     BINDINGS = [
-        Binding("l", "choose_path", "Go"),
-        Binding("h", "goto_parent", "Out"),
-        Binding("j", "next_file", "Next"),
-        Binding("k", "prev_file", "Prev"),
+        Binding("l,right", "choose_path", "Go"),
+        Binding("h,left", "goto_parent", "Out"),
+        Binding("j,down", "next_file", "Next"),
+        Binding("k,up", "prev_file", "Prev"),
     ]
-
-    selected_index = reactive(0)
 
     def __init__(
         self,
@@ -104,17 +101,26 @@ class Directory(Widget, can_focus=True):
         id: str | None = None,
         classes: str | None = None,
         path: Path | None = None,
-        selected_file_path: Path | None = None,
     ):
         """
         Args:
             path (Path | None): The Path of the directory to display contents of.
         """
         super().__init__(name=name, id=id, classes=classes)
-        self._path = path or Path.cwd()
-        self._files = list_files_in_dir(self._path)
-        if selected_file_path:
-            self.selected_index = self._files.index(selected_file_path)
+        self.path = path or Path.cwd()
+        self._files = list_files_in_dir(self.path)
+        self._selected_index = 0
+
+    @property
+    def selected_index(self):
+        return self._selected_index
+
+    @selected_index.setter
+    def selected_index(self, new_value: int):
+        self._selected_index = self._clamp_index(new_value)
+        selected_file = self._files[self._selected_index]
+        self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+        self.refresh(layout=True)
 
     def action_next_file(self):
         self.selected_index += 1
@@ -122,13 +128,43 @@ class Directory(Widget, can_focus=True):
     def action_prev_file(self):
         self.selected_index -= 1
 
-    def validate_selected_index(self, new_index: int) -> int:
+    def action_choose_path(self):
+        if self.current_highlighted_path.is_dir():
+            self.emit_no_wait(
+                Directory.CurrentDirChanged(self, new_dir=self.current_highlighted_path,
+                                            from_dir=None))
+
+    def action_goto_parent(self):
+        self.emit_no_wait(Directory.CurrentDirChanged(self, new_dir=self.path.parent,
+                                                      from_dir=self.path))
+
+    def _clamp_index(self, new_index: int) -> int:
         """Ensure the selected index stays within range"""
         return clamp(new_index, 0, len(self._files) - 1)
 
-    def watch_selected_index(self, new_index: int):
-        selected_file = self._files[new_index]
-        self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+    @property
+    def current_highlighted_path(self):
+        return self._files[self.selected_index]
+
+    def update_source_directory(self, new_path: Path | None) -> None:
+        if new_path is not None:
+            self.path = new_path
+            self._files = list_files_in_dir(new_path)
+        self.selected_index = 0 if len(self._files) > 0 else None
+
+    def select_path(self, path: Path):
+        print(f"selecting path {path}")
+        if path is None:
+            self.selected_index = 0
+            return
+
+        try:
+            print(self._files)
+            print(path)
+            index = self._files.index(path)
+        except ValueError:
+            index = 0
+        self.selected_index = index
 
     def render(self) -> RenderableType:
         dir_style = self.get_component_rich_style("directory--dir")
@@ -150,8 +186,19 @@ class Directory(Widget, can_focus=True):
             highlight_meta_column_style=highlight_meta_column_style,
         )
 
-    # def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-    #     return len(self._files)
+    class CurrentDirChanged(Message, bubble=True):
+        def __init__(self, sender: DOMNode, new_dir: Path,
+                     from_dir: Path | None) -> None:
+            """
+            Args:
+                sender: The sending node
+                new_dir: The new active current dir
+                from_dir: Only relevant when we step up the file hierarchy,
+                    for ensuring initial selection in parent starts at correct place.
+            """
+            self.new_dir = new_dir
+            self.from_dir = from_dir
+            super().__init__(sender)
 
     class FilePreviewChanged(Message, bubble=True):
         """Should be sent to the app when the selected file is changed."""

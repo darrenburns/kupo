@@ -13,7 +13,8 @@ from _files import list_files_in_dir
 class Preview(Static):
     COMPONENT_CLASSES = {
         "preview--body",
-        "directory--meta-column"
+        "directory--meta-column",
+        "directory--dir",
     }
 
     def __init__(
@@ -33,14 +34,17 @@ class Preview(Static):
         self._content_height = len(lines)
         lexer = Syntax.guess_lexer(str(path), text)
         background_colour = self.get_component_styles("preview--body").background.hex
-        self.update(Syntax(text, lexer, background_color=str(background_colour), line_numbers=True, indent_guides=True))
+        self.update(Syntax(text, lexer, background_color=str(background_colour),
+                           line_numbers=True, indent_guides=True))
 
     def show_directory_preview(self, path: Path) -> None:
         files = list_files_in_dir(path)
         self._content_height = len(files)
         self._content_width = None
+        directory_style = self.get_component_rich_style("directory--dir")
         directory = DirectoryListRenderable(files,
                                             selected_index=None,
+                                            dir_style=directory_style,
                                             meta_column_style=self.get_component_rich_style(
                                                 "directory--meta-column"))
         self.update(directory)
