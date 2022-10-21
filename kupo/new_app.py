@@ -31,7 +31,7 @@ class Home(Screen):
 
     def compose(self) -> ComposeResult:
         cwd = Path.cwd()
-        parent = Directory(path=cwd.parent, id="parent-dir", classes="dir-list")
+        parent = Directory(path=cwd.parent, id="parent-dir", classes="dir-list", selected_file_path=cwd)
         parent.can_focus = False
 
         yield Header()
@@ -46,11 +46,14 @@ class Home(Screen):
         self.query_one("#current-dir").focus(scroll_visible=False)
 
     def on_directory_file_preview_changed(self, event: Directory.FilePreviewChanged):
-        # Ensure the message is coming from the correct directory widget
-        # TODO: Could probably add a readonly flag to Directory to prevent having this check
+        """When we press up or down to highlight different dirs or files, we
+        need to update the preview on the right-hand side of the screen."""
+
         if self._update_preview_task and not self._update_preview_task.done():
             self._update_preview_task.cancel()
 
+        # Ensure the message is coming from the correct directory widget
+        # TODO: Could probably add a readonly flag to Directory to prevent having this check
         if event.sender.id == "current-dir":
             if event.path.is_file():
                 self._update_preview_task = asyncio.create_task(
@@ -60,7 +63,6 @@ class Home(Screen):
 
     async def show_syntax(self, path: Path) -> None:
         async with aiofiles.open(path, mode='r') as f:
-            print("READING")
             # TODO - if they start scrolling preview, load more than 1024 bytes.
             contents = await f.read(1024)
         self.query_one("#preview", Preview).show_syntax(contents, path)

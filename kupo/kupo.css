@@ -8,9 +8,11 @@ Screen {
 }
 
 #current-dir {
-    /*border-left: solid $panel-lighten-1;*/
-    /*border-right: solid $panel-lighten-1;*/
     padding: 0 1;
+}
+
+#parent-dir {
+    padding-left: 1;
 }
 
 .directory--dir {
@@ -28,6 +30,12 @@ Screen {
     background: $boost 7%;
 }
 
+#parent-dir > .directory--highlighted-dir {
+    text-style: bold;
+    color: $text;
+    background: $accent;
+}
+
 .directory--meta-column {
     color: $text 50%;
     background: $boost 4%;
@@ -35,6 +43,10 @@ Screen {
 
 .directory--highlighted-meta-column {
     background: $boost 9%;
+}
+
+#parent-dir .directory--highlighted-meta-column {
+    background: $accent-darken-2;
 }
 
 #preview-wrapper {

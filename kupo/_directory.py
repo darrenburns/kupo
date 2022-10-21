@@ -104,6 +104,7 @@ class Directory(Widget, can_focus=True):
         id: str | None = None,
         classes: str | None = None,
         path: Path | None = None,
+        selected_file_path: Path | None = None,
     ):
         """
         Args:
@@ -112,6 +113,8 @@ class Directory(Widget, can_focus=True):
         super().__init__(name=name, id=id, classes=classes)
         self._path = path or Path.cwd()
         self._files = list_files_in_dir(self._path)
+        if selected_file_path:
+            self.selected_index = self._files.index(selected_file_path)
 
     def action_next_file(self):
         self.selected_index += 1
