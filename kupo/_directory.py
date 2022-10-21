@@ -51,13 +51,13 @@ class DirectoryListRenderable:
             is_dir = file.is_dir()
             if not self.filter or (self.filter and re.search(self.filter, file.name)):
                 if index == self.selected_index:
-                    meta_style = self.meta_column_style
+                    meta_style = self.highlight_meta_column_style
                     if is_dir:
                         style = self.highlight_dir_style or "bold red on #1E90FF"
                     else:
                         style = self.highlight_style or "bold red on #1E90FF"
                 else:
-                    meta_style = self.highlight_meta_column_style
+                    meta_style = self.meta_column_style
                     if is_dir:
                         style = self.dir_style
                     else:
@@ -128,9 +128,9 @@ class Directory(Widget, can_focus=True):
     def render(self) -> RenderableType:
         dir_style = self.get_component_rich_style("directory--dir")
         highlight_style = self.get_component_rich_style("directory--highlighted")
-        meta_column_style = self.get_component_rich_style(
-            "directory--highlighted-meta-column")
         highlight_meta_column_style = self.get_component_rich_style(
+            "directory--highlighted-meta-column")
+        meta_column_style = self.get_component_rich_style(
             "directory--meta-column")
         highlight_dir_style = self.get_component_rich_style(
             "directory--highlighted-dir")

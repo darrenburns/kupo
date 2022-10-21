@@ -13,36 +13,39 @@ Screen {
     padding: 0 1;
 }
 
-.dir-list > .directory--dir {
+.directory--dir {
     color: $accent;
 }
 
-.dir-list > .directory--highlighted {
+.directory--highlighted {
     text-style: bold;
-    background: $boost;
+    background: $boost 7%;
 }
 
-.dir-list > .directory--highlighted-dir {
+.directory--highlighted-dir {
     text-style: bold;
     color: $accent-lighten-1;
-    background: $boost;
+    background: $boost 7%;
 }
 
-.dir-list > .directory--meta-column {
+.directory--meta-column {
     color: $text 50%;
     background: $boost 4%;
 }
 
-.dir-list > .directory--highlighted-meta-column {
-    background: $boost 7%;
+.directory--highlighted-meta-column {
+    background: $boost 9%;
 }
 
 #preview-wrapper {
     width: 2fr;
     scrollbar-size-vertical: 1;
+    scrollbar-gutter: stable;
 }
 
 Preview {
+    height: auto;
+    width: auto;
     border-bottom: solid $background-lighten-2;
 }
 
@@ -54,7 +57,7 @@ Header {
     dock: top;
     height: 1;
     color: auto;
-    background: $panel;
+    background: $primary 5%;
 }
 
 /** {*/

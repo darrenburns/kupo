@@ -21,7 +21,6 @@ from _preview import Preview
 class Home(Screen):
     BINDINGS = [
         Binding("enter", "choose_path", "Go"),
-        Binding("d", "toggle_dark", "Dark"),
         Binding("g", "top_of_file", "Top"),
         Binding("G", "bottom_of_file", "Bottom"),
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),

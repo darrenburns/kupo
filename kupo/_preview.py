@@ -12,7 +12,8 @@ from _files import list_files_in_dir
 
 class Preview(Static):
     COMPONENT_CLASSES = {
-        "preview--body"
+        "preview--body",
+        "directory--meta-column"
     }
 
     def __init__(
@@ -23,8 +24,8 @@ class Preview(Static):
         classes: str | None = None,
     ):
         super().__init__(name=name, id=id, classes=classes)
-        self._content_height = 0
-        self._content_width = 0
+        self._content_height = None
+        self._content_width = None
 
     def show_syntax(self, text: str, path: Path) -> None:
         lines = text.split("\n")
@@ -37,12 +38,16 @@ class Preview(Static):
     def show_directory_preview(self, path: Path) -> None:
         files = list_files_in_dir(path)
         self._content_height = len(files)
+        self._content_width = None
         directory = DirectoryListRenderable(files,
-                                            selected_index=None)
+                                            selected_index=None,
+                                            meta_column_style=self.get_component_rich_style(
+                                                "directory--meta-column"))
         self.update(directory)
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return self._content_height
+        return self._content_height or super().get_content_height(container, viewport,
+                                                                  width)
 
     def get_content_width(self, container: Size, viewport: Size) -> int:
-        return self._content_width
+        return self._content_width or super().get_content_width(container, viewport)
