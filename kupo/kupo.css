@@ -1,3 +1,7 @@
+Screen {
+    background: $background;
+}
+
 .dir-list {
     width: 1fr;
     background: $background;
@@ -7,7 +11,6 @@
     /*border-left: solid $panel-lighten-1;*/
     /*border-right: solid $panel-lighten-1;*/
     padding: 0 1;
-    height: auto;
 }
 
 .dir-list > .directory--dir {
@@ -37,6 +40,21 @@
 #preview-wrapper {
     width: 2fr;
     scrollbar-size-vertical: 1;
+}
+
+Preview {
+    border-bottom: solid $background-lighten-2;
+}
+
+Preview > .preview--body {
+    background: $background;
+}
+
+Header {
+    dock: top;
+    height: 1;
+    color: auto;
+    background: $panel;
 }
 
 /** {*/

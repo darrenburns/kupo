@@ -6,8 +6,15 @@ from rich.syntax import Syntax
 from textual.geometry import Size
 from textual.widgets import Static
 
+from _directory import DirectoryListRenderable
+from _files import list_files_in_dir
 
-class SyntaxPreview(Static):
+
+class Preview(Static):
+    COMPONENT_CLASSES = {
+        "preview--body"
+    }
+
     def __init__(
         self,
         *,
@@ -19,12 +26,20 @@ class SyntaxPreview(Static):
         self._content_height = 0
         self._content_width = 0
 
-    def update_content(self, text: str, path: Path) -> None:
+    def show_syntax(self, text: str, path: Path) -> None:
         lines = text.split("\n")
         self._content_width = max(len(line) for line in lines)
         self._content_height = len(lines)
         lexer = Syntax.guess_lexer(str(path), text)
-        self.update(Syntax(text, lexer))
+        background_colour = self.get_component_styles("preview--body").background.hex
+        self.update(Syntax(text, lexer, background_color=str(background_colour)))
+
+    def show_directory_preview(self, path: Path) -> None:
+        files = list_files_in_dir(path)
+        self._content_height = len(files)
+        directory = DirectoryListRenderable(files,
+                                            selected_index=None)
+        self.update(directory)
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
         return self._content_height

@@ -88,6 +88,8 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-meta-column",
     }
     BINDINGS = [
+        Binding("l", "choose_path", "Go"),
+        Binding("h", "goto_parent", "Out"),
         Binding("j", "next_file", "Next"),
         Binding("k", "prev_file", "Prev"),
     ]
@@ -121,8 +123,7 @@ class Directory(Widget, can_focus=True):
 
     def watch_selected_index(self, new_index: int):
         selected_file = self._files[new_index]
-        print("posting file_selected")
-        self.emit_no_wait(Directory.FileSelected(self, selected_file))
+        self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
 
     def render(self) -> RenderableType:
         dir_style = self.get_component_rich_style("directory--dir")
@@ -144,10 +145,10 @@ class Directory(Widget, can_focus=True):
             highlight_meta_column_style=highlight_meta_column_style,
         )
 
-    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return len(self._files)
+    # def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+    #     return len(self._files)
 
-    class FileSelected(Message, bubble=True):
+    class FilePreviewChanged(Message, bubble=True):
         """Should be sent to the app when the selected file is changed."""
 
         def __init__(self, sender: DOMNode, path: Path) -> None:

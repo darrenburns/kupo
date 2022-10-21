@@ -6,7 +6,6 @@ from pathlib import Path
 
 import aiofiles
 from rich.markdown import Markdown
-from rich.syntax import Syntax
 from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -15,14 +14,13 @@ from textual.screen import Screen
 from textual.widgets import Static, Footer
 
 from _directory import Directory
-from _preview import SyntaxPreview
+from _header import Header
+from _preview import Preview
 
 
 class Home(Screen):
     BINDINGS = [
-        Binding("l", "choose_path", "In"),
-        Binding("h", "goto_parent", "Out"),
-        Binding("enter", "choose_path", "Child"),
+        Binding("enter", "choose_path", "Go"),
         Binding("d", "toggle_dark", "Dark"),
         Binding("g", "top_of_file", "Top"),
         Binding("G", "bottom_of_file", "Bottom"),
@@ -37,17 +35,18 @@ class Home(Screen):
         parent = Directory(path=cwd.parent, id="parent-dir", classes="dir-list")
         parent.can_focus = False
 
+        yield Header()
         yield Horizontal(
             parent,
             Directory(path=cwd, id="current-dir", classes="dir-list"),
-            Container(SyntaxPreview(id="preview"), id="preview-wrapper"),
+            Container(Preview(id="preview"), id="preview-wrapper"),
         )
         yield Footer()
 
     def on_mount(self, event: events.Mount) -> None:
         self.query_one("#current-dir").focus(scroll_visible=False)
 
-    def on_directory_file_selected(self, event: Directory.FileSelected):
+    def on_directory_file_preview_changed(self, event: Directory.FilePreviewChanged):
         # Ensure the message is coming from the correct directory widget
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
         if self._update_preview_task and not self._update_preview_task.done():
@@ -56,18 +55,21 @@ class Home(Screen):
         if event.sender.id == "current-dir":
             if event.path.is_file():
                 self._update_preview_task = asyncio.create_task(
-                    self.update_preview(event.path))
+                    self.show_syntax(event.path))
+            elif event.path.is_dir():
+                self.query_one("#preview", Preview).show_directory_preview(event.path)
 
-    async def update_preview(self, path: Path) -> None:
+    async def show_syntax(self, path: Path) -> None:
         async with aiofiles.open(path, mode='r') as f:
+            print("READING")
             # TODO - if they start scrolling preview, load more than 1024 bytes.
             contents = await f.read(1024)
-        self.query_one("#preview", SyntaxPreview).update_content(contents, path)
+        self.query_one("#preview", Preview).show_syntax(contents, path)
 
 
 class Help(Screen):
     BINDINGS = [
-        Binding("q,escape", "app.pop_screen", "Exit Help Screen"),
+        Binding("escape,q", "app.pop_screen", "Exit Help Screen"),
     ]
 
     def compose(self) -> ComposeResult:
