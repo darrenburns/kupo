@@ -30,20 +30,23 @@ class Home(Screen):
     _update_preview_task: Task | None = None
 
     def compose(self) -> ComposeResult:
-        cwd = Path.cwd()
-        parent = Directory(path=cwd.parent, id="parent-dir", classes="dir-list")
+        self._initial_cwd = Path.cwd()
+        parent = Directory(path=self._initial_cwd.parent, id="parent-dir",
+                           classes="dir-list")
         parent.can_focus = False
-        parent.select_path(cwd)
 
         yield Header()
         yield Horizontal(
             parent,
-            Directory(path=cwd, id="current-dir", classes="dir-list"),
+            Container(
+                Directory(path=self._initial_cwd, id="current-dir", classes="dir-list"),
+                id="current-dir-wrapper"),
             Container(Preview(id="preview"), id="preview-wrapper"),
         )
         yield Footer()
 
     def on_mount(self, event: events.Mount) -> None:
+        self.query_one("#parent-dir", Directory).select_path(self._initial_cwd)
         self.query_one("#current-dir").focus(scroll_visible=False)
 
     def on_directory_file_preview_changed(self, event: Directory.FilePreviewChanged):
@@ -60,15 +63,19 @@ class Home(Screen):
                 self.query_one("#preview", Preview).show_directory_preview(event.path)
 
     def on_directory_current_dir_changed(self, event: Directory.CurrentDirChanged):
-        new_directory = event.new_dir
+        new_dir = event.new_dir
+        from_dir = event.from_dir
+        self._update_directory_and_parent_widgets(new_dir, from_dir)
+
+    def _update_directory_and_parent_widgets(self, new_dir: Path,
+                                             from_dir: Path | None = None) -> None:
         directory_widget = self.query_one("#current-dir", Directory)
-        directory_widget.update_source_directory(new_directory)
-        print(f"event.from_dir = {event.from_dir}")
-        directory_widget.select_path(event.from_dir)
+        directory_widget.update_source_directory(new_dir)
+        directory_widget.select_path(from_dir)
 
         parent_directory_widget = self.query_one("#parent-dir", Directory)
-        parent_directory_widget.update_source_directory(new_directory.parent)
-        parent_directory_widget.select_path(new_directory)
+        parent_directory_widget.update_source_directory(new_dir.parent)
+        parent_directory_widget.select_path(new_dir)
 
     async def show_syntax(self, path: Path) -> None:
         async with aiofiles.open(path, mode='r') as f:

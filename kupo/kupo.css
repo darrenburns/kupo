@@ -7,8 +7,17 @@ Screen {
 }
 
 #current-dir {
-    padding: 0 1;
+    height: auto;
+}
+
+#current-dir-wrapper {
+    padding-left: 1;
     width: 3fr;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-size-vertical: 1;
+    scrollbar-color: $primary 60%;
+    scrollbar-gutter: stable;
 }
 
 #parent-dir {
@@ -22,13 +31,14 @@ Screen {
 
 .directory--highlighted {
     text-style: bold;
-    background: $boost 7%;
+    color: $text;
+    background: $accent;
 }
 
 .directory--highlighted-dir {
     text-style: bold;
-    color: $accent-lighten-2;
-    background: $boost 7%;
+    color: $text;
+    background: $accent;
 }
 
 #parent-dir > .directory--highlighted-dir {
@@ -43,7 +53,7 @@ Screen {
 }
 
 .directory--highlighted-meta-column {
-    background: $boost 9%;
+    background: $accent-darken-2;
 }
 
 #parent-dir .directory--highlighted-meta-column {
@@ -52,8 +62,8 @@ Screen {
 
 #preview-wrapper {
     width: 5fr;
-    scrollbar-size-vertical: 1;
     scrollbar-gutter: stable;
+    scrollbar-size-vertical: 1;
     scrollbar-color: $primary 60%;
 }
 

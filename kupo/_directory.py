@@ -8,9 +8,10 @@ from rich.markup import escape
 from rich.style import Style
 from rich.table import Table
 from rich.text import Text
+from textual import events
 from textual.binding import Binding
 from textual.dom import DOMNode
-from textual.geometry import clamp
+from textual.geometry import clamp, Size
 from textual.message import Message
 from textual.widget import Widget
 
@@ -80,6 +81,7 @@ class DirectoryListRenderable:
         yield table
 
 
+
 class Directory(Widget, can_focus=True):
     COMPONENT_CLASSES = {
         "directory--dir",
@@ -109,7 +111,10 @@ class Directory(Widget, can_focus=True):
         super().__init__(name=name, id=id, classes=classes)
         self.path = path or Path.cwd()
         self._files = list_files_in_dir(self.path)
-        self._selected_index = 0
+
+    def _on_mount(self, event: events.Mount) -> None:
+        # This is in place to trigger the FilePreviewChanged
+        self.selected_index = 0
 
     @property
     def selected_index(self):
@@ -120,13 +125,26 @@ class Directory(Widget, can_focus=True):
         self._selected_index = self._clamp_index(new_value)
         selected_file = self._files[self._selected_index]
         self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+        # If we're scrolled such that the selected index is not on screen.
+        # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
+        # Then update the scrolling
         self.refresh(layout=True)
 
     def action_next_file(self):
         self.selected_index += 1
+        self.parent.scroll_down(animate=False)
 
     def action_prev_file(self):
         self.selected_index -= 1
+        self.parent.scroll_up(animate=False)
+
+    def _on_mouse_scroll_down(self, event) -> None:
+        if self.has_focus:
+            self.selected_index += 1
+
+    def _on_mouse_scroll_up(self, event) -> None:
+        if self.has_focus:
+            self.selected_index -= 1
 
     def action_choose_path(self):
         if self.current_highlighted_path.is_dir():
@@ -152,15 +170,15 @@ class Directory(Widget, can_focus=True):
             self._files = list_files_in_dir(new_path)
         self.selected_index = 0 if len(self._files) > 0 else None
 
+    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+        return len(self._files)
+
     def select_path(self, path: Path):
-        print(f"selecting path {path}")
         if path is None:
             self.selected_index = 0
             return
 
         try:
-            print(self._files)
-            print(path)
             index = self._files.index(path)
         except ValueError:
             index = 0
