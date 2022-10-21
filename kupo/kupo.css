@@ -14,7 +14,7 @@ Screen {
 }
 
 .directory--dir {
-    color: $accent;
+    color: $accent-lighten-1;
 }
 
 .directory--highlighted {
@@ -41,6 +41,7 @@ Screen {
     width: 2fr;
     scrollbar-size-vertical: 1;
     scrollbar-gutter: stable;
+    scrollbar-color: $primary 60%;
 }
 
 Preview {

@@ -15,5 +15,4 @@
 
 ## Misc
 
-* `d` - Toggle dark/light theme
 * `?` - Open this help file

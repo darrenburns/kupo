@@ -33,7 +33,7 @@ class Preview(Static):
         self._content_height = len(lines)
         lexer = Syntax.guess_lexer(str(path), text)
         background_colour = self.get_component_styles("preview--body").background.hex
-        self.update(Syntax(text, lexer, background_color=str(background_colour)))
+        self.update(Syntax(text, lexer, background_color=str(background_colour), line_numbers=True, indent_guides=True))
 
     def show_directory_preview(self, path: Path) -> None:
         files = list_files_in_dir(path)

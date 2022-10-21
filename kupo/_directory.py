@@ -10,7 +10,7 @@ from rich.table import Table
 from rich.text import Text
 from textual.binding import Binding
 from textual.dom import DOMNode
-from textual.geometry import clamp, Size
+from textual.geometry import clamp
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -68,6 +68,8 @@ class DirectoryListRenderable:
                     file_name += "/"
 
                 file_name = Text(file_name, style=style)
+                if file_name.plain.startswith("."):
+                    file_name.stylize(Style(dim=True))
                 if self.filter:
                     file_name.highlight_regex(self.filter, "#191004 on #FEA62B")
 
