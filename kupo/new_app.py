@@ -15,15 +15,15 @@ from textual.widgets import Static, Footer
 
 from _directory import Directory
 from _file_info_bar import CurrentFileInfoBar
-from _header import Header
+from _header import Header, HeaderCurrentPath
 from _preview import Preview
 
 
 class Home(Screen):
     BINDINGS = [
         Binding("enter", "choose_path", "Go"),
-        Binding("g", "top_of_file", "Top"),
-        Binding("G", "bottom_of_file", "Bottom"),
+        Binding("g", "top_of_file", "Top", key_display="g"),
+        Binding("G", "bottom_of_file", "Bottom", key_display="G"),
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
         Binding("ctrl+c", "quit", "Exit"),
     ]
@@ -66,6 +66,7 @@ class Home(Screen):
                 asyncio.create_task(self.show_syntax(event.path))
             elif event.path.is_dir():
                 self.query_one("#preview", Preview).show_directory_preview(event.path)
+        self.query_one(HeaderCurrentPath).path = event.path
 
     def on_directory_current_dir_changed(self, event: Directory.CurrentDirChanged):
         new_dir = event.new_dir

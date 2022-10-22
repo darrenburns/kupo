@@ -24,22 +24,26 @@ class CurrentFileInfoBar(Widget):
     def render(self) -> RenderableType:
         file = self.file
         file_stat = file.stat()
-        modify_time = datetime.utcfromtimestamp(file_stat.st_mtime).strftime(
+        modify_time = datetime.fromtimestamp(file_stat.st_mtime).strftime(
             "%-d %b %y %H:%M")
         perm_string = stat.filemode(file_stat.st_mode)
-        background = self.styles.background
-        background_dark = background.lighten(amount=.035).hex
         perm_string = Text.assemble(
             (perm_string[0], "b dim"),
-            (perm_string[1], f"yellow b on {background_dark}"),
-            (perm_string[2], f"red b on {background_dark}"),
-            (perm_string[3], f"green b on {background_dark}"),
-            (perm_string[4], f"yellow"),
-            (perm_string[5], f"red"),
-            (perm_string[6], f"green"),
-            (perm_string[7], f"yellow on {background_dark}"),
-            (perm_string[8], f"red on {background_dark}"),
-            (perm_string[9], f"green on {background_dark}"),
+            (perm_string[1],
+             f"yellow b" if perm_string[1] == "r" else "dim"),
+            (perm_string[2],
+             f"red b" if perm_string[2] == "w" else "dim"),
+            (perm_string[3],
+             f"green b" if perm_string[3] == "x" else "dim"),
+            (perm_string[4], "yellow b" if perm_string[4] == "r" else "dim"),
+            (perm_string[5], "red b" if perm_string[5] == "w" else "dim"),
+            (perm_string[6], "green b" if perm_string[6] == "x" else "dim"),
+            (perm_string[7],
+             f"b yellow" if perm_string[7] == "r" else "dim"),
+            (perm_string[8],
+             f"b red" if perm_string[8] == "w" else "dim"),
+            (perm_string[9],
+             f"b green" if perm_string[9] == "x" else "dim"),
         )
         assembled = [
             perm_string,

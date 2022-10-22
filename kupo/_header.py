@@ -1,16 +1,31 @@
 from __future__ import annotations
 
+import os
 import socket
+from pathlib import Path
 
 from rich.console import RenderableType
+from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal
+from textual.reactive import reactive
 from textual.widget import Widget
 
 
 class HeaderTitle(Widget):
     def render(self) -> RenderableType:
         return " ⌒ ● ⌒ "
+
+
+class HeaderCurrentPath(Widget):
+    path = reactive(None, layout=True)
+
+    def render(self) -> RenderableType:
+        if not self.path:
+            return ""
+
+        path = str(self.path.name)
+        root = str(self.path.parent) + os.path.sep
+        return Text.assemble((root, "dim"), (path, "bold"))
 
 
 class HeaderHost(Widget):
@@ -29,7 +44,5 @@ class Header(Widget):
         super().__init__(name=name, id=id, classes=classes)
 
     def compose(self) -> ComposeResult:
-        yield Horizontal(
-            HeaderHost(id="header-host"),
-            HeaderTitle(id="header-title"),
-        )
+        yield HeaderHost(id="header-host")
+        yield HeaderCurrentPath(id="header-current-path")

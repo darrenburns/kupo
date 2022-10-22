@@ -30,8 +30,8 @@ class Preview(Static):
 
     def show_syntax(self, text: str, path: Path) -> None:
         lines = text.split("\n")
-        self._content_width = max(len(line) for line in lines)
         self._content_height = len(lines)
+        self._content_width = max(len(line) for line in lines) + len(str(len(lines))) + 1
         lexer = Syntax.guess_lexer(str(path), text)
         background_colour = self.get_component_styles("preview--body").background.hex
         self.update(
@@ -63,4 +63,7 @@ class Preview(Static):
         )
 
     def get_content_width(self, container: Size, viewport: Size) -> int:
-        return self._content_width or super().get_content_width(container, viewport)
+        if self._content_width is not None:
+            return max(container.width, self._content_width)
+        else:
+            return super().get_content_width(container, viewport)
