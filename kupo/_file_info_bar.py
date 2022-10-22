@@ -9,6 +9,8 @@ from rich.text import Text
 from textual.reactive import reactive
 from textual.widget import Widget
 
+from _files import convert_size
+
 
 class CurrentFileInfoBar(Widget):
     file: Path | None = reactive(None)
@@ -23,24 +25,39 @@ class CurrentFileInfoBar(Widget):
         file = self.file
         file_stat = file.stat()
         modify_time = datetime.utcfromtimestamp(file_stat.st_mtime).strftime(
-            "%-d %b %y %X")
+            "%-d %b %y %H:%M")
         perm_string = stat.filemode(file_stat.st_mode)
+        background = self.styles.background
+        background_dark = background.lighten(amount=.035).hex
         perm_string = Text.assemble(
             (perm_string[0], "b dim"),
-            (perm_string[1], "yellow b"),
-            (perm_string[2], "red b"),
-            (perm_string[3], "green b"),
-            (perm_string[4], "yellow"),
-            (perm_string[5], "red"),
-            (perm_string[6], "green"),
-            (perm_string[7], "yellow"),
-            (perm_string[8], "red"),
-            (perm_string[9], "green"),
+            (perm_string[1], f"yellow b on {background_dark}"),
+            (perm_string[2], f"red b on {background_dark}"),
+            (perm_string[3], f"green b on {background_dark}"),
+            (perm_string[4], f"yellow"),
+            (perm_string[5], f"red"),
+            (perm_string[6], f"green"),
+            (perm_string[7], f"yellow on {background_dark}"),
+            (perm_string[8], f"red on {background_dark}"),
+            (perm_string[9], f"green on {background_dark}"),
         )
-        return Text.assemble(
-            (file.name, "bold"),
-            "  ",
+        assembled = [
             perm_string,
-            "  ",
-            modify_time
-        )
+            (" ╲ ", "dim cyan"),
+        ]
+
+        if file.is_file():
+            assembled += [
+                Text.from_markup(convert_size(file.stat().st_size)),
+                (" ╲ ", "dim cyan"),
+            ]
+
+        assembled += [
+            modify_time,
+            (" ╲ ", "dim cyan"),
+            file.owner(),
+            (" ╲ ", "dim cyan"),
+            file.group(),
+        ]
+
+        return Text.assemble(*assembled)
