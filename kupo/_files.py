@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 from pathlib import Path
 
@@ -15,7 +17,12 @@ def convert_size(size_bytes):
 
 def list_files_in_dir(dir: Path) -> list[Path]:
     try:
-        files = list(dir.iterdir())
+        files = sorted(list(dir.iterdir()), key=_directory_sorter, reverse=True)
     except OSError:
         files = []
     return files
+
+
+def _directory_sorter(path: Path) -> tuple[bool, bool, str]:
+    name = path.name
+    return (path.is_dir(), name.startswith("."), name)

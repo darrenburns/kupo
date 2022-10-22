@@ -84,10 +84,20 @@ Preview > .preview--body {
 }
 
 Header {
+    width: 100%;
     dock: top;
     height: 1;
     color: auto;
     background: $primary 5%;
+}
+#header-title {
+    width: auto;
+    dock: right;
+}
+#header-host {
+    width: auto;
+    padding-left: 1;
+    text-style: bold;
 }
 
 CurrentFileInfoBar {

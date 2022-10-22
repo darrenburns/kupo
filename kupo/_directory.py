@@ -9,13 +9,11 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 from textual import events
-from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.dom import DOMNode
 from textual.geometry import clamp, Size
 from textual.message import Message
 from textual.widget import Widget
-from textual.widgets import Static
 
 from _files import convert_size, list_files_in_dir
 
