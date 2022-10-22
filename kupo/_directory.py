@@ -15,7 +15,7 @@ from textual.geometry import clamp, Size
 from textual.message import Message
 from textual.widget import Widget
 
-from _files import convert_size, list_files_in_dir
+from _files import convert_size, list_files_in_dir, _count_files
 
 
 class DirectoryListRenderable:
@@ -65,6 +65,13 @@ class DirectoryListRenderable:
                 file_name = escape(file.name)
                 if is_dir:
                     file_name += "/"
+                    meta_value = str(_count_files(file) or "?")
+                    meta_style += Style(dim=True)
+                else:
+                    try:
+                        meta_value = convert_size(file.stat().st_size)
+                    except FileNotFoundError:
+                        meta_value = "[dim]?"
 
                 file_name = Text(file_name, style=style)
                 if file_name.plain.startswith("."):
@@ -74,9 +81,7 @@ class DirectoryListRenderable:
 
                 table.add_row(
                     file_name,
-                    Text.from_markup(
-                        convert_size(file.stat().st_size), style=meta_style
-                    ),
+                    Text.from_markup(meta_value, style=meta_style),
                 )
         yield table
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 
 
@@ -17,7 +18,7 @@ def convert_size(size_bytes):
 
 def list_files_in_dir(dir: Path) -> list[Path]:
     try:
-        files = sorted(list(dir.iterdir()), key=_directory_sorter, reverse=True)
+        files = sorted(list(dir.iterdir()), key=_directory_sorter)
     except OSError:
         files = []
     return files
@@ -25,4 +26,13 @@ def list_files_in_dir(dir: Path) -> list[Path]:
 
 def _directory_sorter(path: Path) -> tuple[bool, bool, str]:
     name = path.name
-    return (path.is_dir(), name.startswith("."), name)
+    return (not path.is_dir(), not name.startswith("."), name)
+
+
+def _count_files(dir: Path) -> int | None:
+    """Return the number of files in a directory.
+    Return None if we can't (e.g. permission error)"""
+    try:
+        return len([1 for x in os.scandir(dir)])
+    except PermissionError:
+        return None
