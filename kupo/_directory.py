@@ -9,11 +9,13 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 from textual import events
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.dom import DOMNode
 from textual.geometry import clamp, Size
 from textual.message import Message
 from textual.widget import Widget
+from textual.widgets import Static
 
 from _files import convert_size, list_files_in_dir
 
@@ -29,7 +31,6 @@ class DirectoryListRenderable:
         highlight_dir_style: Style | None = None,
         meta_column_style: Style | None = None,
         highlight_meta_column_style: Style | None = None,
-
     ) -> None:
         self.files = files
         self.selected_index = selected_index
@@ -75,11 +76,11 @@ class DirectoryListRenderable:
 
                 table.add_row(
                     file_name,
-                    Text.from_markup(convert_size(file.stat().st_size),
-                                     style=meta_style),
+                    Text.from_markup(
+                        convert_size(file.stat().st_size), style=meta_style
+                    ),
                 )
         yield table
-
 
 
 class Directory(Widget, can_focus=True):
@@ -91,10 +92,10 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-meta-column",
     }
     BINDINGS = [
-        Binding("l,right", "choose_path", "Go"),
-        Binding("h,left", "goto_parent", "Out"),
-        Binding("j,down", "next_file", "Next"),
-        Binding("k,up", "prev_file", "Prev"),
+        Binding("l", "choose_path", "Go"),
+        Binding("h", "goto_parent", "Out"),
+        Binding("j", "next_file", "Next"),
+        Binding("k", "prev_file", "Prev"),
     ]
 
     def __init__(
@@ -149,12 +150,17 @@ class Directory(Widget, can_focus=True):
     def action_choose_path(self):
         if self.current_highlighted_path.is_dir():
             self.emit_no_wait(
-                Directory.CurrentDirChanged(self, new_dir=self.current_highlighted_path,
-                                            from_dir=None))
+                Directory.CurrentDirChanged(
+                    self, new_dir=self.current_highlighted_path, from_dir=None
+                )
+            )
 
     def action_goto_parent(self):
-        self.emit_no_wait(Directory.CurrentDirChanged(self, new_dir=self.path.parent,
-                                                      from_dir=self.path))
+        self.emit_no_wait(
+            Directory.CurrentDirChanged(
+                self, new_dir=self.path.parent, from_dir=self.path
+            )
+        )
 
     def _clamp_index(self, new_index: int) -> int:
         """Ensure the selected index stays within range"""
@@ -188,11 +194,12 @@ class Directory(Widget, can_focus=True):
         dir_style = self.get_component_rich_style("directory--dir")
         highlight_style = self.get_component_rich_style("directory--highlighted")
         highlight_meta_column_style = self.get_component_rich_style(
-            "directory--highlighted-meta-column")
-        meta_column_style = self.get_component_rich_style(
-            "directory--meta-column")
+            "directory--highlighted-meta-column"
+        )
+        meta_column_style = self.get_component_rich_style("directory--meta-column")
         highlight_dir_style = self.get_component_rich_style(
-            "directory--highlighted-dir")
+            "directory--highlighted-dir"
+        )
         return DirectoryListRenderable(
             files=self._files,
             selected_index=self.selected_index,
@@ -205,8 +212,9 @@ class Directory(Widget, can_focus=True):
         )
 
     class CurrentDirChanged(Message, bubble=True):
-        def __init__(self, sender: DOMNode, new_dir: Path,
-                     from_dir: Path | None) -> None:
+        def __init__(
+            self, sender: DOMNode, new_dir: Path, from_dir: Path | None
+        ) -> None:
             """
             Args:
                 sender: The sending node

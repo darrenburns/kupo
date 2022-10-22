@@ -25,6 +25,12 @@ Screen {
     width: 2fr;
 }
 
+#current-file-infobar {
+    dock: bottom;
+    height: 1;
+    background: blue;
+}
+
 .directory--dir {
     color: $accent-lighten-1;
 }
@@ -82,6 +88,15 @@ Header {
     height: 1;
     color: auto;
     background: $primary 5%;
+}
+
+CurrentFileInfoBar {
+    dock: bottom;
+    padding: 0 1;
+    margin-bottom: 1;
+    background: $accent-darken-3;
+    color: $text;
+    height: 1;
 }
 
 /** {*/

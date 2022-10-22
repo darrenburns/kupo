@@ -14,6 +14,7 @@ from textual.screen import Screen
 from textual.widgets import Static, Footer
 
 from _directory import Directory
+from _file_info_bar import CurrentFileInfoBar
 from _header import Header
 from _preview import Preview
 
@@ -31,8 +32,9 @@ class Home(Screen):
 
     def compose(self) -> ComposeResult:
         self._initial_cwd = Path.cwd()
-        parent = Directory(path=self._initial_cwd.parent, id="parent-dir",
-                           classes="dir-list")
+        parent = Directory(
+            path=self._initial_cwd.parent, id="parent-dir", classes="dir-list"
+        )
         parent.can_focus = False
 
         yield Header()
@@ -40,9 +42,11 @@ class Home(Screen):
             parent,
             Container(
                 Directory(path=self._initial_cwd, id="current-dir", classes="dir-list"),
-                id="current-dir-wrapper"),
+                id="current-dir-wrapper",
+            ),
             Container(Preview(id="preview"), id="preview-wrapper"),
         )
+        yield CurrentFileInfoBar()
         yield Footer()
 
     def on_mount(self, event: events.Mount) -> None:
@@ -56,6 +60,7 @@ class Home(Screen):
         # Ensure the message is coming from the correct directory widget
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
         print(f"FILE PREVIEW CHANGED: {event.path}")
+        self.query_one(CurrentFileInfoBar).file = event.path
         if event.sender.id == "current-dir":
             if event.path.is_file():
                 asyncio.create_task(self.show_syntax(event.path))
@@ -67,8 +72,9 @@ class Home(Screen):
         from_dir = event.from_dir
         self._update_directory_and_parent_widgets(new_dir, from_dir)
 
-    def _update_directory_and_parent_widgets(self, new_dir: Path,
-                                             from_dir: Path | None = None) -> None:
+    def _update_directory_and_parent_widgets(
+        self, new_dir: Path, from_dir: Path | None = None
+    ) -> None:
         directory_widget = self.query_one("#current-dir", Directory)
         directory_widget.update_source_directory(new_dir)
         directory_widget.select_path(from_dir)
@@ -78,7 +84,7 @@ class Home(Screen):
         parent_directory_widget.select_path(new_dir)
 
     async def show_syntax(self, path: Path) -> None:
-        async with aiofiles.open(path, mode='r') as f:
+        async with aiofiles.open(path, mode="r") as f:
             # TODO - if they start scrolling preview, load more than 1024 bytes.
             contents = await f.read(2048)
         self.query_one("#preview", Preview).show_syntax(contents, path)

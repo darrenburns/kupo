@@ -38,19 +38,6 @@ def convert_size(size_bytes):
     return "%s %s" % (s, size_name[i])
 
 
-def octal_to_string(octal):
-    result = ""
-    value_letters = [(4, "r"), (2, "w"), (1, "x")]
-    for digit in [int(n) for n in str(octal)]:
-        for value, letter in value_letters:
-            if digit >= value:
-                result += letter
-                digit -= value
-            else:
-                result += "-"
-    return result
-
-
 class SelectedPath(Message, bubble=True):
     def __init__(self, path: Path, sender: MessageTarget):
         self.path = path
