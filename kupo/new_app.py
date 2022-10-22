@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import Task
 from pathlib import Path
 
 import aiofiles
@@ -21,14 +20,9 @@ from _preview import Preview
 
 class Home(Screen):
     BINDINGS = [
-        Binding("enter", "choose_path", "Go"),
-        Binding("g", "top_of_file", "Top", key_display="g"),
-        Binding("G", "bottom_of_file", "Bottom", key_display="G"),
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
-        Binding("ctrl+c", "quit", "Exit"),
+        Binding("q", "quit", "Exit"),
     ]
-
-    _update_preview_task: Task | None = None
 
     def compose(self) -> ComposeResult:
         self._initial_cwd = Path.cwd()
@@ -59,7 +53,6 @@ class Home(Screen):
 
         # Ensure the message is coming from the correct directory widget
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
-        print(f"FILE PREVIEW CHANGED: {event.path}")
         self.query_one(CurrentFileInfoBar).file = event.path
         if event.sender.id == "current-dir":
             if event.path.is_file():
