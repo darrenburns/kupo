@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.text import Text
 from textual import events
 from textual.binding import Binding
+from textual.color import Color
 from textual.dom import DOMNode
 from textual.geometry import clamp, Size
 from textual.message import Message
@@ -74,7 +75,7 @@ class DirectoryListRenderable:
                         meta_value = "[dim]?"
 
                 file_name = Text(file_name, style=style)
-                if file_name.plain.startswith("."):
+                if file_name.plain.startswith(".") and index != self.selected_index:
                     file_name.stylize(Style(dim=True))
                 if self.filter:
                     file_name.highlight_regex(self.filter, "#191004 on #FEA62B")
@@ -180,7 +181,7 @@ class Directory(Widget, can_focus=True):
         self.selected_index = 0 if len(self._files) > 0 else None
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return len(self._files)
+        return max(len(self._files), container.height)
 
     def select_path(self, path: Path):
         if path is None:

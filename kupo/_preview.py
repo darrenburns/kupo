@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from rich.syntax import Syntax
+from textual.binding import Binding
 from textual.geometry import Size
 from textual.widgets import Static
 
@@ -10,12 +11,19 @@ from _directory import DirectoryListRenderable
 from _files import list_files_in_dir
 
 
-class Preview(Static):
+class Preview(Static, can_focus=True):
     COMPONENT_CLASSES = {
         "preview--body",
         "directory--meta-column",
         "directory--dir",
     }
+
+    BINDINGS = [
+        Binding("g", "top", "Home", key_display="g"),
+        Binding("G", "bottom", "End", key_display="G"),
+        Binding("j", "down", "Down", key_display="j"),
+        Binding("k", "up", "Up", key_display="k"),
+    ]
 
     def __init__(
         self,
@@ -31,7 +39,8 @@ class Preview(Static):
     def show_syntax(self, text: str, path: Path) -> None:
         lines = text.split("\n")
         self._content_height = len(lines)
-        self._content_width = max(len(line) for line in lines) + len(str(len(lines))) + 1
+        self._content_width = max(len(line) for line in lines) + len(
+            str(len(lines))) + 1
         lexer = Syntax.guess_lexer(str(path), text)
         background_colour = self.get_component_styles("preview--body").background.hex
         self.update(
@@ -58,9 +67,7 @@ class Preview(Static):
         self.update(directory)
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return self._content_height or super().get_content_height(
-            container, viewport, width
-        )
+        return max(self._content_height or 0, container.height)
 
     def get_content_width(self, container: Size, viewport: Size) -> int:
         if self._content_width is not None:

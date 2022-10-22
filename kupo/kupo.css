@@ -10,27 +10,26 @@ Screen {
 
 #current-dir {
     height: auto;
+    padding-left: 1;
+}
+
+#current-dir:focus {
+    tint: $accent 5%;
+    border-left: wide $accent;
+    padding-left: 0;
 }
 
 #current-dir-wrapper {
-    padding-left: 1;
     width: 3fr;
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-size-vertical: 1;
     scrollbar-color: $scrollbar-color;
-    scrollbar-gutter: stable;
 }
 
 #parent-dir {
     padding-left: 1;
     width: 2fr;
-}
-
-#current-file-infobar {
-    dock: bottom;
-    height: 1;
-    background: blue;
 }
 
 .directory--dir {
@@ -78,7 +77,13 @@ Screen {
 Preview {
     height: auto;
     width: auto;
-    border-bottom: solid $background-lighten-2;
+    padding-left: 1;
+}
+
+Preview:focus {
+    tint: $accent 5%;
+    border-left: wide $accent;
+    padding-left: 0;
 }
 
 Preview > .preview--body {
@@ -113,117 +118,3 @@ CurrentFileInfoBar {
     color: $text;
     height: 1;
 }
-
-/** {*/
-/*    transition: color 500ms linear, background 500ms linear;*/
-/*}*/
-/*Screen {*/
-/*    layout: dock;*/
-/*}*/
-
-/*#header {*/
-/*    height: 1;*/
-/*    color: $text;*/
-/*    background: $accent;*/
-/*    padding: 0 1;*/
-/*}*/
-
-/*#footer {*/
-/*    height: 1;*/
-/*    color: $text;*/
-/*    background: $accent;*/
-/*}*/
-
-/*.empty_space {*/
-/*    color: $surface;*/
-/*}*/
-
-/*#body_wrapper {*/
-/*    layout: dock;*/
-/*    docks: lhs=left rhs=right;*/
-/*    width: auto;*/
-/*    background: $surface;*/
-/*    color: $text-surface;*/
-/*}*/
-
-/*#file_preview_wrapper {*/
-/*    dock: lhs;*/
-/*    color: $surface;*/
-/*    background: $surface;*/
-/*    overflow: auto auto;*/
-/*    scrollbar-color: dodgerblue;*/
-/*    scrollbar-background: #0e3e6e;*/
-/*}*/
-
-/*#file_preview_content {*/
-/*    color: $text-surface;*/
-/*    background: $surface;*/
-/*    height: auto;*/
-/*    width: auto;*/
-/*}*/
-
-/*#this_directory_wrapper {*/
-/*    dock: lhs;*/
-/*    layout: dock;*/
-/*    docks: tdwtop=top tdwbot=bottom;*/
-/*    color: $text-surface;*/
-/*    background: $surface;*/
-/*}*/
-
-/*#this_directory {*/
-/*    height: auto;*/
-/*    dock: tdwtop;*/
-/*    border-left: heavy $primary-darken-2;*/
-/*    border-right: heavy $primary-darken-2;*/
-/*}*/
-
-/*#this_directory:focus {*/
-/*    background: $surface-darken-1;*/
-/*    border-left: heavy $accent;*/
-/*    border-right: heavy $accent;*/
-/*}*/
-
-/*#this_directory_search_info {*/
-/*    dock: tdwbot;*/
-/*    height: 1;*/
-/*    background: $surface-darken-1;*/
-/*    border-left: transparent;*/
-/*    border-right: transparent;*/
-/*    display: none;*/
-/*}*/
-
-/*#this_directory_search {*/
-/*    dock: tdwbot;*/
-/*    border-left: transparent;*/
-/*    border-right: transparent;*/
-/*    background: $surface;*/
-/*    height: 1;*/
-/*}*/
-
-/*#this_directory_search:focus {*/
-/*    background: $surface-darken-1;*/
-/*    border-left: heavy $accent;*/
-/*    border-right: heavy $accent;*/
-/*}*/
-
-
-/*#this_directory_header {*/
-/*    dock: tdwtop;*/
-/*    height: 1;*/
-/*}*/
-
-/*.directory_list_header {*/
-/*    height: 1;*/
-/*    background: $accent-darken-1;*/
-/*}*/
-
-/*#parent_directory {*/
-/*    color: $text-surface;*/
-/*    background: $surface;*/
-/*    height: auto;*/
-/*}*/
-
-/*#parent_directory_wrapper {*/
-/*    dock: lhs;*/
-/*    overflow: hidden hidden;*/
-/*}*/
