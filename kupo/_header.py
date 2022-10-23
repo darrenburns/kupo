@@ -3,7 +3,6 @@ from __future__ import annotations
 import getpass
 import os
 import socket
-from pathlib import Path
 
 from rich.console import RenderableType
 from rich.text import Text
