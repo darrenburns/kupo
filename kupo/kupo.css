@@ -135,9 +135,14 @@ Header {
     width: auto;
 }
 
+#header-user {
+    width: auto;
+    color: $text 60%;
+}
+
 #header-host {
     width: auto;
-    color: $text 50%;
+    color: $text 60%;
 }
 
 CurrentFileInfoBar {

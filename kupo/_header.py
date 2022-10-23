@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import getpass
 import os
 import socket
 from pathlib import Path
@@ -30,7 +31,12 @@ class HeaderCurrentPath(Widget):
 
 class HeaderHost(Widget):
     def render(self) -> RenderableType:
-        return socket.gethostname()
+        return "[dim]@[/]" + socket.gethostname()
+
+
+class HeaderUser(Widget):
+    def render(self) -> RenderableType:
+        return getpass.getuser()
 
 
 class Header(Widget):
@@ -44,5 +50,6 @@ class Header(Widget):
         super().__init__(name=name, id=id, classes=classes)
 
     def compose(self) -> ComposeResult:
+        yield HeaderUser(id="header-user")
         yield HeaderHost(id="header-host")
         yield HeaderCurrentPath(id="header-current-path")
