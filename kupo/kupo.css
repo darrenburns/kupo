@@ -28,6 +28,17 @@ Screen {
     scrollbar-color: $scrollbar-color;
 }
 
+#current-dir-filter-warning {
+    dock: bottom;
+    display: none;
+    padding: 1;
+    padding-top: 0;
+    height: auto;
+    border-top: hkey $error-darken-1;
+    color: $text;
+    background: $error-darken-2;
+}
+
 #directory-search {
     dock: bottom;
     height: 1;

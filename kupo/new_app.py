@@ -40,6 +40,11 @@ class Home(Screen):
             Container(
                 Directory(directory_search=directory_search, path=self._initial_cwd, id="current-dir", classes="dir-list"),
                 directory_search,
+                Container(
+                    Static("[b]Filter still active"),
+                    Static("Press [b]ESC[/] to clear"),
+                    id="current-dir-filter-warning",
+                ),
                 id="current-dir-wrapper",
             ),
             Container(Preview(id="preview"), id="preview-wrapper"),
@@ -66,6 +71,8 @@ class Home(Screen):
         self.query_one(HeaderCurrentPath).path = event.path
 
     def on_directory_current_dir_changed(self, event: Directory.CurrentDirChanged):
+        # If we change directory, filters no longer apply
+        self.query_one("#directory-search-input").value = ""
         new_dir = event.new_dir
         from_dir = event.from_dir
         self._update_directory_and_parent_widgets(new_dir, from_dir)

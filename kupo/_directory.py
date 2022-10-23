@@ -13,10 +13,11 @@ from textual.binding import Binding
 from textual.dom import DOMNode
 from textual.geometry import clamp, Size
 from textual.message import Message
+from textual.reactive import reactive
 from textual.widget import Widget
 
-from _files import convert_size, list_files_in_dir, _count_files
 from _directory_search import DirectorySearch
+from _files import convert_size, list_files_in_dir, _count_files
 
 
 class DirectoryListRenderable:
@@ -96,12 +97,15 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-meta-column",
     }
     BINDINGS = [
-        Binding("slash", "find", "Find"),
+        Binding("slash", "find", "Find", key_display="/"),
+        Binding("escape", "clear_filter", "Clear filters", key_display="ESC"),
         Binding("l", "choose_path", "Go"),
         Binding("h", "goto_parent", "Out"),
         Binding("j", "next_file", "Next"),
         Binding("k", "prev_file", "Prev"),
     ]
+
+    filter = reactive("")
 
     def __init__(
         self,
@@ -130,10 +134,11 @@ class Directory(Widget, can_focus=True):
         return self._selected_index
 
     @selected_index.setter
-    def selected_index(self, new_value: int):
-        self._selected_index = self._clamp_index(new_value)
-        selected_file = self._files[self._selected_index]
-        self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+    def selected_index(self, new_value: int | None):
+        if new_value is not None:
+            self._selected_index = self._clamp_index(new_value)
+            selected_file = self._files[self._selected_index]
+            self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
         # If we're scrolled such that the selected index is not on screen.
         # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
         # Then update the scrolling
@@ -150,6 +155,11 @@ class Directory(Widget, can_focus=True):
     def action_prev_file(self):
         self.selected_index -= 1
         self.parent.scroll_up(animate=False)
+
+    def action_clear_filter(self):
+        self.directory_search.input.value = ""
+        warning_banner = self.app.query_one("#current-dir-filter-warning")
+        warning_banner.display = False
 
     def _on_mouse_scroll_down(self, event) -> None:
         if self.has_focus:
@@ -168,6 +178,7 @@ class Directory(Widget, can_focus=True):
             )
 
     def action_goto_parent(self):
+        self.directory_search.input.value = ""
         self.emit_no_wait(
             Directory.CurrentDirChanged(
                 self, new_dir=self.path.parent, from_dir=self.path
@@ -177,6 +188,11 @@ class Directory(Widget, can_focus=True):
     def _clamp_index(self, new_index: int) -> int:
         """Ensure the selected index stays within range"""
         return clamp(new_index, 0, len(self._files) - 1)
+
+    def watch_filter(self, new_filter: str):
+        self._files = [file for file in list_files_in_dir(self.path) if
+                       re.match(new_filter, file.name)]
+        self.selected_index = 0 if self._files else None
 
     @property
     def current_highlighted_path(self):
@@ -190,6 +206,16 @@ class Directory(Widget, can_focus=True):
 
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
         return max(len(self._files), container.height)
+
+    def on_focus(self, event: events.Focus) -> None:
+        search_input = self.app.query_one("#directory-search-input")
+        if search_input.value != "":
+            warning_banner = self.app.query_one("#current-dir-filter-warning")
+            warning_banner.display = True
+
+    def on_blur(self, event: events.Blur):
+        warning_banner = self.app.query_one("#current-dir-filter-warning")
+        warning_banner.display = False
 
     def select_path(self, path: Path):
         if path is None:
@@ -215,7 +241,7 @@ class Directory(Widget, can_focus=True):
         return DirectoryListRenderable(
             files=self._files,
             selected_index=self.selected_index,
-            filter="",
+            filter=self.filter,
             dir_style=dir_style,
             highlight_style=highlight_style,
             highlight_dir_style=highlight_dir_style,
