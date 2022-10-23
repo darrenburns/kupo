@@ -13,10 +13,10 @@ from textual.screen import Screen
 from textual.widgets import Static, Footer
 
 from _directory import Directory
+from _directory_search import DirectorySearch
 from _file_info_bar import CurrentFileInfoBar
 from _header import Header, HeaderCurrentPath
 from _preview import Preview
-from _directory_search import DirectorySearch
 
 
 class Home(Screen):
@@ -38,7 +38,8 @@ class Home(Screen):
         yield Horizontal(
             parent,
             Container(
-                Directory(directory_search=directory_search, path=self._initial_cwd, id="current-dir", classes="dir-list"),
+                Directory(directory_search=directory_search, path=self._initial_cwd,
+                          id="current-dir", classes="dir-list"),
                 directory_search,
                 Container(
                     Static("[b]Filter still active"),
@@ -97,7 +98,7 @@ class Home(Screen):
 
 class Help(Screen):
     BINDINGS = [
-        Binding("escape,q", "app.pop_screen", "Exit Help Screen"),
+        Binding("escape,q,question_mark", "app.pop_screen", "Exit Help Screen"),
     ]
 
     def compose(self) -> ComposeResult:

@@ -1,4 +1,4 @@
-# Kupo Commands
+# Kupo Help
 
 ## Moving around your filesystem
 
@@ -6,7 +6,9 @@
 * `k` - go to previous file in current directory
 * `h` - go to parent directory
 * `l` - go to currently highlighted directory
-* `1`, `2`, `3`, ... - jump to file by sort order number 
+* `g` - go to first file in directory
+* `G` - go to last file in directory
+* `/` - filter the current directory
 
 ## Moving around inside files
 
