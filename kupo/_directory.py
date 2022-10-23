@@ -99,10 +99,12 @@ class Directory(Widget, can_focus=True):
     BINDINGS = [
         Binding("slash", "find", "Find", key_display="/"),
         Binding("escape", "clear_filter", "Clear filters", key_display="ESC"),
-        Binding("l", "choose_path", "Go"),
-        Binding("h", "goto_parent", "Out"),
-        Binding("j", "next_file", "Next"),
-        Binding("k", "prev_file", "Prev"),
+        Binding("l", "choose_path", "Go", key_display="l"),
+        Binding("h", "goto_parent", "Out", key_display="h"),
+        Binding("j", "next_file", "Next", key_display="j"),
+        Binding("k", "prev_file", "Prev", key_display="k"),
+        Binding("g", "first", "First", key_display="g"),
+        Binding("G", "last", "Last"),
     ]
 
     filter = reactive("")
@@ -161,13 +163,11 @@ class Directory(Widget, can_focus=True):
         warning_banner = self.app.query_one("#current-dir-filter-warning")
         warning_banner.display = False
 
-    def _on_mouse_scroll_down(self, event) -> None:
-        if self.has_focus:
-            self.selected_index += 1
+    def action_first(self):
+        self.selected_index = self._clamp_index(0)
 
-    def _on_mouse_scroll_up(self, event) -> None:
-        if self.has_focus:
-            self.selected_index -= 1
+    def action_last(self):
+        self.selected_index = len(self._files) - 1 if self._files else None
 
     def action_choose_path(self):
         if self.current_highlighted_path.is_dir():
@@ -185,8 +185,18 @@ class Directory(Widget, can_focus=True):
             )
         )
 
-    def _clamp_index(self, new_index: int) -> int:
+    def _on_mouse_scroll_down(self, event) -> None:
+        if self.has_focus:
+            self.selected_index += 1
+
+    def _on_mouse_scroll_up(self, event) -> None:
+        if self.has_focus:
+            self.selected_index -= 1
+
+    def _clamp_index(self, new_index: int) -> int | None:
         """Ensure the selected index stays within range"""
+        if not self._files:
+            return None
         return clamp(new_index, 0, len(self._files) - 1)
 
     def watch_filter(self, new_filter: str):
