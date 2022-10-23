@@ -12,6 +12,7 @@ from textual.containers import Horizontal, Container
 from textual.screen import Screen
 from textual.widgets import Static, Footer
 
+from _command_line import CommandLine
 from _directory import Directory
 from _directory_search import DirectorySearch
 from _file_info_bar import CurrentFileInfoBar
@@ -50,6 +51,7 @@ class Home(Screen):
             ),
             Container(Preview(id="preview"), id="preview-wrapper"),
         )
+        yield CommandLine(id="command-line")
         yield CurrentFileInfoBar()
         yield Footer()
 

@@ -153,3 +153,27 @@ CurrentFileInfoBar {
     color: $text;
     height: 1;
 }
+
+#command-line {
+    dock: bottom;
+    height: 1;
+    margin-bottom: 2;
+    background: $panel;
+}
+
+#command-line-input {
+    height: 1;
+    border: none;
+    width: 100%;
+    padding: 0;
+    background: $panel;
+}
+
+#command-line-prompt {
+    width: 5;
+    dock: left;
+}
+
+.active-prompt {
+    color: $success;
+}
