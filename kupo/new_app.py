@@ -16,12 +16,13 @@ from _directory import Directory
 from _file_info_bar import CurrentFileInfoBar
 from _header import Header, HeaderCurrentPath
 from _preview import Preview
+from _directory_search import DirectorySearch
 
 
 class Home(Screen):
     BINDINGS = [
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
-        Binding("q", "quit", "Exit"),
+        Binding("q", "quit", "Quit"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -31,11 +32,14 @@ class Home(Screen):
         )
         parent.can_focus = False
 
+        directory_search = DirectorySearch(id="directory-search")
+
         yield Header()
         yield Horizontal(
             parent,
             Container(
-                Directory(path=self._initial_cwd, id="current-dir", classes="dir-list"),
+                Directory(directory_search=directory_search, path=self._initial_cwd, id="current-dir", classes="dir-list"),
+                directory_search,
                 id="current-dir-wrapper",
             ),
             Container(Preview(id="preview"), id="preview-wrapper"),

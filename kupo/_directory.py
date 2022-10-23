@@ -10,13 +10,13 @@ from rich.table import Table
 from rich.text import Text
 from textual import events
 from textual.binding import Binding
-from textual.color import Color
 from textual.dom import DOMNode
 from textual.geometry import clamp, Size
 from textual.message import Message
 from textual.widget import Widget
 
 from _files import convert_size, list_files_in_dir, _count_files
+from _directory_search import DirectorySearch
 
 
 class DirectoryListRenderable:
@@ -96,6 +96,7 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-meta-column",
     }
     BINDINGS = [
+        Binding("slash", "find", "Find"),
         Binding("l", "choose_path", "Go"),
         Binding("h", "goto_parent", "Out"),
         Binding("j", "next_file", "Next"),
@@ -104,6 +105,8 @@ class Directory(Widget, can_focus=True):
 
     def __init__(
         self,
+        directory_search: DirectorySearch | None = None,
+        *,
         name: str | None = None,
         id: str | None = None,
         classes: str | None = None,
@@ -116,6 +119,7 @@ class Directory(Widget, can_focus=True):
         super().__init__(name=name, id=id, classes=classes)
         self.path = path or Path.cwd()
         self._files = list_files_in_dir(self.path)
+        self.directory_search = directory_search
 
     def _on_mount(self, event: events.Mount) -> None:
         # This is in place to trigger the FilePreviewChanged
@@ -134,6 +138,10 @@ class Directory(Widget, can_focus=True):
         # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
         # Then update the scrolling
         self.refresh(layout=True)
+
+    def action_find(self):
+        self.directory_search.display = True
+        self.directory_search.focus()
 
     def action_next_file(self):
         self.selected_index += 1

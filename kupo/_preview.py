@@ -66,6 +66,18 @@ class Preview(Static, can_focus=True):
         )
         self.update(directory)
 
+    def action_up(self):
+        self.parent.scroll_up(animate=False)
+
+    def action_down(self):
+        self.parent.scroll_down(animate=False)
+
+    def action_top(self):
+        self.parent.scroll_home(animate=False)
+
+    def action_bottom(self):
+        self.parent.scroll_end(animate=False)
+
     def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
         return max(self._content_height or 0, container.height)
 

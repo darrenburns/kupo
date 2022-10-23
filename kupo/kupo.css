@@ -20,11 +20,30 @@ Screen {
 }
 
 #current-dir-wrapper {
+    layout: vertical;
     width: 3fr;
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-size-vertical: 1;
     scrollbar-color: $scrollbar-color;
+}
+
+#directory-search {
+    dock: bottom;
+    height: 1;
+    display: none;
+}
+
+#directory-search-input {
+    height: 1;
+    border: none;
+    padding: 0 1;
+}
+
+#directory-search-input:focus {
+    padding-left: 0;
+    border-left: wide $accent;
+    tint: $accent 5%;
 }
 
 #parent-dir {
