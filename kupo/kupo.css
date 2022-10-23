@@ -175,5 +175,15 @@ CurrentFileInfoBar {
 }
 
 .active-prompt {
-    color: $success;
+    color: $success-darken-1;
+}
+
+#command-reference {
+    dock: bottom;
+    display: none;
+    height: 1;
+    padding: 0 1;
+    margin-bottom: 3;
+    background: $success;
+    color: $text;
 }

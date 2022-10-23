@@ -12,7 +12,7 @@ from textual.containers import Horizontal, Container
 from textual.screen import Screen
 from textual.widgets import Static, Footer
 
-from _command_line import CommandLine
+from _command_line import CommandLine, CommandReference
 from _directory import Directory
 from _directory_search import DirectorySearch
 from _file_info_bar import CurrentFileInfoBar
@@ -23,7 +23,9 @@ from _preview import Preview
 class Home(Screen):
     BINDINGS = [
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
-        Binding("q", "quit", "Quit"),
+        Binding("c", "focus('command-line-input')", "Focus command line",
+                key_display="c"),
+        Binding("q", "quit", "Quit", key_display="q"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -52,6 +54,7 @@ class Home(Screen):
             Container(Preview(id="preview"), id="preview-wrapper"),
         )
         yield CommandLine(id="command-line")
+        yield CommandReference(id="command-reference")
         yield CurrentFileInfoBar()
         yield Footer()
 
@@ -65,19 +68,21 @@ class Home(Screen):
 
         # Ensure the message is coming from the correct directory widget
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
-        self.query_one(CurrentFileInfoBar).file = event.path
+        path = event.path
+        self.query_one(CurrentFileInfoBar).file = path
         if event.sender.id == "current-dir":
-            if event.path.is_file():
-                asyncio.create_task(self.show_syntax(event.path))
-            elif event.path.is_dir():
-                self.query_one("#preview", Preview).show_directory_preview(event.path)
-        self.query_one(HeaderCurrentPath).path = event.path
+            if path.is_file():
+                asyncio.create_task(self.show_syntax(path))
+            elif path.is_dir():
+                self.query_one("#preview", Preview).show_directory_preview(path)
+
+        self.query_one(HeaderCurrentPath).path = path
 
     def on_directory_current_dir_changed(self, event: Directory.CurrentDirChanged):
         # If we change directory, filters no longer apply
         self.query_one("#directory-search-input").value = ""
-        new_dir = event.new_dir
-        from_dir = event.from_dir
+        new_dir = event.new_dir.resolve()
+        from_dir = event.from_dir.resolve() if event.from_dir else None
         self._update_directory_and_parent_widgets(new_dir, from_dir)
 
     def _update_directory_and_parent_widgets(

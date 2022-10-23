@@ -15,6 +15,8 @@ class DirectorySearch(Widget):
         yield self.input
 
     def on_input_changed(self, event: Input.Changed) -> None:
+        if event.sender.id != "directory-search-input":
+            return
         self.app.query_one("#current-dir").filter = event.value
         warning_banner = self.app.query_one("#current-dir-filter-warning")
         warning_banner.display = False
