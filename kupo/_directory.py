@@ -112,6 +112,7 @@ class Directory(Widget, can_focus=True):
     def __init__(
         self,
         directory_search: DirectorySearch | None = None,
+        cursor_movement_enabled: bool = False,
         *,
         name: str | None = None,
         id: str | None = None,
@@ -126,6 +127,7 @@ class Directory(Widget, can_focus=True):
         self.path = path or Path.cwd()
         self._files = list_files_in_dir(self.path)
         self.directory_search = directory_search
+        self.cursor_movement_enabled = cursor_movement_enabled
 
     def _on_mount(self, event: events.Mount) -> None:
         # This is in place to trigger the FilePreviewChanged
@@ -147,16 +149,18 @@ class Directory(Widget, can_focus=True):
         self.refresh(layout=True)
 
     def action_find(self):
-        self.directory_search.display = True
-        self.directory_search.focus()
+            self.directory_search.display = True
+            self.directory_search.focus()
 
     def action_next_file(self):
-        self.selected_index += 1
-        self.parent.scroll_down(animate=False)
+        if self.has_focus and self.cursor_movement_enabled:
+            self.selected_index += 1
+            self.parent.scroll_down(animate=False)
 
     def action_prev_file(self):
-        self.selected_index -= 1
-        self.parent.scroll_up(animate=False)
+        if self.has_focus and self.cursor_movement_enabled:
+            self.selected_index -= 1
+            self.parent.scroll_up(animate=False)
 
     def action_clear_filter(self):
         self.directory_search.input.value = ""
@@ -186,11 +190,11 @@ class Directory(Widget, can_focus=True):
         )
 
     def _on_mouse_scroll_down(self, event) -> None:
-        if self.has_focus:
+        if self.has_focus and self.cursor_movement_enabled:
             self.selected_index += 1
 
     def _on_mouse_scroll_up(self, event) -> None:
-        if self.has_focus:
+        if self.has_focus and self.cursor_movement_enabled:
             self.selected_index -= 1
 
     def _clamp_index(self, new_index: int) -> int | None:

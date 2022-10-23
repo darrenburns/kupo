@@ -41,7 +41,7 @@ class Home(Screen):
         yield Horizontal(
             parent,
             Container(
-                Directory(directory_search=directory_search, path=self._initial_cwd,
+                Directory(directory_search=directory_search, cursor_movement_enabled=True, path=self._initial_cwd,
                           id="current-dir", classes="dir-list"),
                 directory_search,
                 Container(

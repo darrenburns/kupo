@@ -185,5 +185,5 @@ CurrentFileInfoBar {
     padding: 0 1;
     margin-bottom: 3;
     background: $success;
-    color: $text;
+    color: black;
 }

@@ -4,7 +4,6 @@ from pathlib import Path
 
 from rich.syntax import Syntax
 from textual.binding import Binding
-from textual.geometry import Size
 from textual.widgets import Static
 
 from _directory import DirectoryListRenderable
@@ -37,10 +36,6 @@ class Preview(Static, can_focus=True):
         self._content_width = None
 
     def show_syntax(self, text: str, path: Path) -> None:
-        lines = text.split("\n")
-        self._content_height = len(lines)
-        self._content_width = max(len(line) for line in lines) + len(
-            str(len(lines))) + 1
         lexer = Syntax.guess_lexer(str(path), text)
         background_colour = self.get_component_styles("preview--body").background.hex
         self.update(
@@ -54,12 +49,9 @@ class Preview(Static, can_focus=True):
         )
 
     def show_directory_preview(self, path: Path) -> None:
-        files = list_files_in_dir(path)
-        self._content_height = len(files)
-        self._content_width = None
         directory_style = self.get_component_rich_style("directory--dir")
         directory = DirectoryListRenderable(
-            files,
+            list_files_in_dir(path),
             selected_index=None,
             dir_style=directory_style,
             meta_column_style=self.get_component_rich_style("directory--meta-column"),
@@ -70,19 +62,13 @@ class Preview(Static, can_focus=True):
         self.parent.scroll_up(animate=False)
 
     def action_down(self):
-        self.parent.scroll_down(animate=False)
+        # TODO: This condition is a hack to workaround Textual seemingly scrolling
+        #  1 more than it should, even when no vertical scrollbar.
+        if not isinstance(self.renderable, DirectoryListRenderable):
+            self.parent.scroll_down(animate=False)
 
     def action_top(self):
         self.parent.scroll_home(animate=False)
 
     def action_bottom(self):
         self.parent.scroll_end(animate=False)
-
-    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
-        return max(self._content_height or 0, container.height)
-
-    def get_content_width(self, container: Size, viewport: Size) -> int:
-        if self._content_width is not None:
-            return max(container.width, self._content_width)
-        else:
-            return super().get_content_width(container, viewport)
