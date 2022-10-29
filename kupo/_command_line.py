@@ -142,8 +142,6 @@ class Cd(Command):
 
         path: Path = path.expanduser()
         current_directory: Path = cmd_line.app.query_one("#current-dir", Directory).path
-        print(f"current_directory = {current_directory}")
-        print(f"argument = {path}")
         path = current_directory.joinpath(path)
         if path.is_dir():
             target_path = path

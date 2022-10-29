@@ -31,10 +31,8 @@ Screen {
 #current-dir-filter-warning {
     dock: bottom;
     display: none;
-    padding: 1;
-    padding-top: 0;
+    padding: 0 1;
     height: auto;
-    border-top: hkey $error-darken-1;
     color: $text;
     background: $error-darken-2;
 }
@@ -145,13 +143,20 @@ Header {
     color: $text 60%;
 }
 
-CurrentFileInfoBar {
+#file-info-bar {
     dock: bottom;
     padding: 0 1;
     margin-bottom: 1;
     background: $accent-darken-3;
     color: $text;
     height: 1;
+}
+
+MimeTypeBar {
+    background: $accent-darken-2;
+    width: auto;
+    height: 1;
+    dock: right;
 }
 
 #command-line {

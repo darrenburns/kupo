@@ -15,7 +15,7 @@ from textual.widgets import Static, Footer
 from _command_line import CommandLine, CommandReference
 from _directory import Directory
 from _directory_search import DirectorySearch
-from _file_info_bar import CurrentFileInfoBar
+from _file_info_bar import CurrentFileInfoBar, MimeTypeBar
 from _header import Header, HeaderCurrentPath
 from _preview import Preview
 
@@ -23,7 +23,7 @@ from _preview import Preview
 class Home(Screen):
     BINDINGS = [
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
-        Binding("c", "focus('command-line-input')", "Focus command line",
+        Binding("colon,c", "focus('command-line-input')", "Focus command line",
                 key_display="c"),
         Binding("q", "quit", "Quit", key_display="q"),
     ]
@@ -41,12 +41,13 @@ class Home(Screen):
         yield Horizontal(
             parent,
             Container(
-                Directory(directory_search=directory_search, cursor_movement_enabled=True, path=self._initial_cwd,
+                Directory(directory_search=directory_search,
+                          cursor_movement_enabled=True, path=self._initial_cwd,
                           id="current-dir", classes="dir-list"),
                 directory_search,
                 Container(
                     Static("[b]Filter still active"),
-                    Static("Press [b]ESC[/] to clear"),
+                    Static("Press [b reverse] ESC [/] to clear"),
                     id="current-dir-filter-warning",
                 ),
                 id="current-dir-wrapper",
@@ -70,6 +71,7 @@ class Home(Screen):
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
         path = event.path
         self.query_one(CurrentFileInfoBar).file = path
+        self.query_one(MimeTypeBar).file = path
         if event.sender.id == "current-dir":
             if path.is_file():
                 asyncio.create_task(self.show_syntax(path))
