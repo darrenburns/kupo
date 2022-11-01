@@ -15,7 +15,7 @@ from textual.widgets import Static, Footer
 from _command_line import CommandLine, CommandReference
 from _directory import Directory
 from _directory_search import DirectorySearch
-from _file_info_bar import CurrentFileInfoBar, MimeTypeBar
+from _file_info_bar import CurrentFileInfoBar
 from _header import Header, HeaderCurrentPath
 from _preview import Preview
 
@@ -56,7 +56,10 @@ class Home(Screen):
         )
         yield CommandLine(id="command-line")
         yield CommandReference(id="command-reference")
-        yield CurrentFileInfoBar()
+        yield Container(
+            CurrentFileInfoBar(),
+            id="file-info-bar",
+        )
         yield Footer()
 
     def on_mount(self, event: events.Mount) -> None:
@@ -71,7 +74,6 @@ class Home(Screen):
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
         path = event.path
         self.query_one(CurrentFileInfoBar).file = path
-        self.query_one(MimeTypeBar).file = path
         if event.sender.id == "current-dir":
             if path.is_file():
                 asyncio.create_task(self.show_syntax(path))

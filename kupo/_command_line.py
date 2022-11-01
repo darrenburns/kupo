@@ -145,7 +145,6 @@ class Cd(Command):
         path = current_directory.joinpath(path)
         if path.is_dir():
             target_path = path
-            print(f"cd-ing to {target_path}")
             cmd_line.emit_no_wait(
                 Directory.CurrentDirChanged(
                     cmd_line, new_dir=target_path, from_dir=None
@@ -171,6 +170,6 @@ class CommandReference(Widget):
         print(info.syntax)
         return Text.assemble(
             Text.from_markup(info.syntax),
-            (" ╲ ", ""),
+            (" ╲╲╲ ", "green"),
             Text.from_markup(info.description),
         )

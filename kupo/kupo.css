@@ -31,7 +31,6 @@ Screen {
 #current-dir-filter-warning {
     dock: bottom;
     display: none;
-    padding: 0 1;
     height: auto;
     color: $text;
     background: $error-darken-2;
