@@ -149,8 +149,8 @@ class Directory(Widget, can_focus=True):
         self.refresh(layout=True)
 
     def action_find(self):
-            self.directory_search.display = True
-            self.directory_search.focus()
+        self.directory_search.display = True
+        self.directory_search.focus()
 
     def action_next_file(self):
         if self.has_focus and self.cursor_movement_enabled:

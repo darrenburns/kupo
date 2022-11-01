@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import shutil
 import stat
 from datetime import datetime
 from pathlib import Path
 
 from rich.console import RenderableType
 from rich.text import Text
+from textual import events
+from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
 
@@ -65,3 +68,29 @@ class CurrentFileInfoBar(Widget):
         ]
 
         return Text.assemble(*assembled)
+
+
+class DiskUsageBar(Widget):
+    total = reactive(0)
+    used = reactive(0)
+    free = reactive(0)
+    show_used = reactive(False)
+
+    def on_mount(self, event: events.Mount) -> None:
+        self.update_stats()
+
+    def on_click(self, event: events.Click) -> None:
+        self.show_used = not self.show_used
+
+    def update_stats(self):
+        total, used, free = shutil.disk_usage("/")
+        self.total = total
+        self.used = used
+        self.free = free
+
+    def render(self) -> RenderableType:
+        if self.show_used:
+            return Text.from_markup(f"{convert_size(self.used)} [dim]used[/]")
+        else:
+            return Text.from_markup(
+                f"{convert_size(self.free)} [dim]free of[/] {convert_size(self.total)}")

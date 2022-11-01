@@ -231,7 +231,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "textual"
-version = "0.2.1"
+version = "0.3.0"
 description = "Modern Text User Interface framework"
 category = "main"
 optional = false
@@ -239,11 +239,11 @@ python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
 importlib-metadata = ">=4.11.3,<5.0.0"
-nanoid = ">=2.0.0,<3.0.0"
+nanoid = ">=2.0.0"
 rich = ">=12.6.0,<13.0.0"
 
 [package.extras]
-dev = ["aiohttp (>=3.8.1,<4.0.0)", "click (==8.1.2)", "msgpack (>=1.0.3,<2.0.0)"]
+dev = ["aiohttp (>=3.8.1)", "click (>=8.1.2)", "msgpack (>=1.0.3)"]
 
 [[package]]
 name = "tomli"
@@ -286,7 +286,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b188461a10b82d9a584ecb58e1a95a7fac7e1d5d3c3d338835efa403f3e9ea35"
+content-hash = "e82a9a1349e3fac1a25c7b454b9fe6c2ed3955785f2810b032d0be2954f7d355"
 
 [metadata.files]
 aiofiles = [
@@ -428,8 +428,8 @@ six = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 textual = [
-    {file = "textual-0.2.1-py3-none-any.whl", hash = "sha256:a063a6886b4f1dd0783cd7b7dd294e692672affa9aa7c153ced606fec82439a8"},
-    {file = "textual-0.2.1.tar.gz", hash = "sha256:98c8f8fa61dfeb999029311ed362cd48acc6be2ebea0e21db7eef0fa4e3df788"},
+    {file = "textual-0.3.0-py3-none-any.whl", hash = "sha256:fa2f2e8ced8894eeee49879599bbcff0f80b7697757ef362c1f29dd3e53fd206"},
+    {file = "textual-0.3.0.tar.gz", hash = "sha256:4bc6b150e1c0f907b235a9de90b7a2dbfcdeb7637d7c5992855116aff6e547c7"},
 ]
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},

@@ -13,7 +13,7 @@ def convert_size(size_bytes):
     p = math.pow(1024, index)
     number = round(size_bytes / p, 2)
     unit = size_name[index]
-    return f"{number:.0f}[dim]{unit}"
+    return f"{number:.0f}[dim]{unit}[/]"
 
 
 def list_files_in_dir(dir: Path) -> list[Path]:

@@ -151,11 +151,14 @@ Header {
     height: 1;
 }
 
-MimeTypeBar {
-    background: $accent-darken-2;
+CurrentFileInfoBar {
     width: auto;
-    height: 1;
+}
+
+DiskUsageBar {
+    width: auto;
     dock: right;
+    text-align: right;
 }
 
 #command-line {

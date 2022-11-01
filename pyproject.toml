@@ -7,7 +7,7 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 rich = "^12.6.0"
-textual = "^0.2.0"
+textual = "^0.3.0"
 aiofiles = "^22.1.0"
 
 [tool.poetry.dev-dependencies]

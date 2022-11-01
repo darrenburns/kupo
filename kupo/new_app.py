@@ -15,7 +15,7 @@ from textual.widgets import Static, Footer
 from _command_line import CommandLine, CommandReference
 from _directory import Directory
 from _directory_search import DirectorySearch
-from _file_info_bar import CurrentFileInfoBar
+from _file_info_bar import CurrentFileInfoBar, DiskUsageBar
 from _header import Header, HeaderCurrentPath
 from _preview import Preview
 
@@ -56,8 +56,9 @@ class Home(Screen):
         )
         yield CommandLine(id="command-line")
         yield CommandReference(id="command-reference")
-        yield Container(
+        yield Horizontal(
             CurrentFileInfoBar(),
+            DiskUsageBar(),
             id="file-info-bar",
         )
         yield Footer()
