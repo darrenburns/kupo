@@ -12,12 +12,12 @@ from textual.containers import Horizontal, Container
 from textual.screen import Screen
 from textual.widgets import Static, Footer
 
-from _command_line import CommandLine, CommandReference
-from _directory import Directory
-from _directory_search import DirectorySearch
-from _file_info_bar import CurrentFileInfoBar, DiskUsageBar
-from _header import Header, HeaderCurrentPath
-from _preview import Preview
+from kupo._command_line import CommandLine, CommandReference
+from kupo._directory import Directory
+from kupo._directory_search import DirectorySearch
+from kupo._file_info_bar import CurrentFileInfoBar, DiskUsageBar
+from kupo._header import Header, HeaderCurrentPath
+from kupo._preview import Preview
 
 
 class Home(Screen):
@@ -124,8 +124,8 @@ class Help(Screen):
 class Kupo(App):
     CSS_PATH = "kupo.css"
     SCREENS = {
-        "home": Home(),
-        "help": Help(),
+        "home": Home,
+        "help": Help,
     }
     BINDINGS = []
 
@@ -134,5 +134,10 @@ class Kupo(App):
 
 
 app = Kupo()
+
+def run():
+    app.run()
+
+
 if __name__ == "__main__":
     app.run()

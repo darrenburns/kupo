@@ -1,6 +1,5 @@
 import platform
 import shlex
-from argparse import Namespace
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,8 +13,8 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Static, Input
 
-from _argparse import KupoArgParser, ParsingError
-from _directory import Directory
+from kupo._argparse import KupoArgParser, ParsingError
+from kupo._directory import Directory
 
 PLATFORM = platform.system()
 WINDOWS = PLATFORM == "Windows"

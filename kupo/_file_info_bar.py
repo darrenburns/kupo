@@ -8,11 +8,10 @@ from pathlib import Path
 from rich.console import RenderableType
 from rich.text import Text
 from textual import events
-from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widget import Widget
 
-from _files import convert_size
+from kupo._files import convert_size
 
 
 class CurrentFileInfoBar(Widget):

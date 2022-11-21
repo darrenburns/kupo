@@ -6,8 +6,8 @@ from rich.syntax import Syntax
 from textual.binding import Binding
 from textual.widgets import Static
 
-from _directory import DirectoryListRenderable
-from _files import list_files_in_dir
+from kupo._directory import DirectoryListRenderable
+from kupo._files import list_files_in_dir
 
 
 class Preview(Static, can_focus=True):

@@ -16,8 +16,8 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
 
-from _directory_search import DirectorySearch
-from _files import convert_size, list_files_in_dir, _count_files
+from kupo._directory_search import DirectorySearch
+from kupo._files import convert_size, list_files_in_dir, _count_files
 
 
 class DirectoryListRenderable:
