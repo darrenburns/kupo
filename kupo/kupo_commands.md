@@ -21,7 +21,8 @@
 
 ### Commands
 
-* `cd PATH` navigate to PATH
+* `cd PATH` - navigate to PATH
+* `q` or `quit` - quit this application 
 
 ## Misc
 

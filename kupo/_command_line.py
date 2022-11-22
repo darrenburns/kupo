@@ -107,7 +107,7 @@ class Command:
 
     @property
     def arg_parser(self) -> KupoArgParser:
-        raise NotImplementedError
+        return KupoArgParser()
 
     def run(self, cmd_line: CommandLine, args: list[str]) -> None:
         raise NotImplementedError
@@ -115,7 +115,7 @@ class Command:
 
 @dataclass
 class Cd(Command):
-    command: str = "cd",
+    command: str = "cd"
     syntax: str = "[b]cd[/] [i]PATH[/]"
     description: str = "Go to the directory at [i]PATH[/]."
 
@@ -152,8 +152,21 @@ class Cd(Command):
             cmd_line.query_one("#command-line-input", Input).value = ""
 
 
+@dataclass
+class Quit(Command):
+    command: str = "quit"
+    syntax: str = "[b]quit[/]"
+    description: str = "Quit this app."
+
+    def run(self, cmd_line: CommandLine, args: list[str]) -> None:
+        cmd_line.app.exit()
+
+
+# TODO: __init_subclass__ is probably better than manually maintaining this:
 _COMMANDS: dict[str, Command] = {
     "cd": Cd(),
+    "q": Quit(),
+    "quit": Quit(),
 }
 
 
@@ -163,12 +176,13 @@ class CommandReference(Widget):
     def render(self) -> RenderableType:
         print(f"getting {self.command_name}")
         info = _COMMANDS.get(self.command_name, None)
+        print(info)
         if not info:
             return ""
 
         print(info.syntax)
         return Text.assemble(
             Text.from_markup(info.syntax),
-            (" ╲╲╲ ", "green"),
+            (" ╲ ", "green"),
             Text.from_markup(info.description),
         )
