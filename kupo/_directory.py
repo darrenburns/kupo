@@ -180,6 +180,17 @@ class Directory(Widget, can_focus=True):
                     self, new_dir=self.current_highlighted_path, from_dir=None
                 )
             )
+        elif self.current_highlighted_path.is_file():
+            # TODO - how do we handle this in Textual?
+            #  Look at ranger/rifle?
+            #  Do we need to disable application mode, let the subprocess take over,
+            #  Then re-enable application mode?
+            from subprocess import call
+            import os
+
+
+            EDITOR = os.environ.get('EDITOR', 'vim')
+            call([EDITOR, str(self.current_highlighted_path.resolve().absolute())])
 
     def action_goto_parent(self):
         self.directory_search.input.value = ""

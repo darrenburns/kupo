@@ -25,7 +25,7 @@ class Home(Screen):
         Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
         Binding("colon,c", "focus('command-line-input')", "Focus command line",
                 key_display="c"),
-        Binding("q", "quit", "Quit", key_display="q"),
+        Binding("ctrl+q", "quit", "Quit", key_display="q"),
     ]
 
     def compose(self) -> ComposeResult:
