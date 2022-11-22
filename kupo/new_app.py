@@ -146,6 +146,7 @@ class Kupo(App):
 
 app = Kupo()
 
+
 def run():
     app.run()
 

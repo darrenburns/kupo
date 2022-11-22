@@ -101,10 +101,10 @@ class Directory(Widget, can_focus=True):
     BINDINGS = [
         Binding("slash", "find", "Find", key_display="/"),
         Binding("escape", "clear_filter", "Clear filters", key_display="ESC"),
-        Binding("l,enter", "choose_path", "In", key_display="l"),
-        Binding("h", "goto_parent", "Out", key_display="h"),
-        Binding("j", "next_file", "Next", key_display="j"),
-        Binding("k", "prev_file", "Prev", key_display="k"),
+        Binding("l,right,enter", "choose_path", "In", key_display="l"),
+        Binding("h,left", "goto_parent", "Out", key_display="h"),
+        Binding("j,down", "next_file", "Next", key_display="j"),
+        Binding("k,up", "prev_file", "Prev", key_display="k"),
         Binding("g", "first", "First", key_display="g"),
         Binding("G", "last", "Last"),
     ]
@@ -130,6 +130,16 @@ class Directory(Widget, can_focus=True):
         self._files = list_files_in_dir(self.path)
         self.directory_search = directory_search
         self.cursor_movement_enabled = cursor_movement_enabled
+
+    def key_up(self, event: events.Key) -> None:
+        event.stop()
+        event.prevent_default()
+        self.action_prev_file()
+
+    def key_down(self, event: events.Key) -> None:
+        event.stop()
+        event.prevent_default()
+        self.action_next_file()
 
     def _on_mount(self, event: events.Mount) -> None:
         # This is in place to trigger the FilePreviewChanged
@@ -157,7 +167,8 @@ class Directory(Widget, can_focus=True):
     def action_next_file(self):
         if self.has_focus and self.cursor_movement_enabled:
             self.selected_index += 1
-            self.parent.scroll_to_region(Region(0, self.selected_index + 1), animate=False)
+            self.parent.scroll_to_region(Region(0, self.selected_index + 1),
+                                         animate=False)
 
     def action_prev_file(self):
         if self.has_focus and self.cursor_movement_enabled:
