@@ -25,10 +25,9 @@ from kupo._preview import Preview
 
 class Home(Screen):
     BINDINGS = [
-        Binding("question_mark", "app.push_screen('help')", "Help", key_display="?"),
-        Binding("colon,c", "focus('command-line-input')", "Focus command line",
-                key_display="c"),
-        Binding("ctrl+q", "quit", "Quit", key_display="q"),
+        Binding("question_mark", "app.push_screen('help')", "Help"),
+        Binding("colon", "focus('command-line-input')", "Focus command line"),
+        Binding("ctrl+q", "quit", "Quit", key_display="ctrl+q"),
     ]
 
     def compose(self) -> ComposeResult:

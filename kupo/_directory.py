@@ -13,7 +13,7 @@ from rich.text import Text
 from textual import events
 from textual.binding import Binding
 from textual.dom import DOMNode
-from textual.geometry import clamp, Size
+from textual.geometry import clamp, Size, Region
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -157,12 +157,12 @@ class Directory(Widget, can_focus=True):
     def action_next_file(self):
         if self.has_focus and self.cursor_movement_enabled:
             self.selected_index += 1
-            self.parent.scroll_down(animate=False)
+            self.parent.scroll_to_region(Region(0, self.selected_index + 1), animate=False)
 
     def action_prev_file(self):
         if self.has_focus and self.cursor_movement_enabled:
             self.selected_index -= 1
-            self.parent.scroll_up(animate=False)
+            self.parent.scroll_to_region(Region(0, self.selected_index), animate=False)
 
     def action_clear_filter(self):
         self.directory_search.input.value = ""

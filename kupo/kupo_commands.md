@@ -15,6 +15,14 @@
 * `g` - go to top of previewed file
 * `G` - go to bottom of previewed file
 
+## Command bar
+
+* `:` - focus the command bar
+
+### Commands
+
+* `cd PATH` navigate to PATH
+
 ## Misc
 
 * `?` - Open this help file
