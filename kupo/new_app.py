@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import sys
+from contextlib import contextmanager, redirect_stdout, redirect_stderr
 from pathlib import Path
+from typing import Iterator
 
 import aiofiles
 from rich.markdown import Markdown
@@ -131,6 +134,15 @@ class Kupo(App):
 
     def on_mount(self) -> None:
         self.push_screen("home")
+
+    @contextmanager
+    def suspend(self) -> Iterator[None]:
+        driver = self._driver
+        if driver is not None:
+            driver.stop_application_mode()
+            with redirect_stdout(sys.__stdout__), redirect_stderr(sys.__stderr__):
+                yield
+            driver.start_application_mode()
 
 
 app = Kupo()

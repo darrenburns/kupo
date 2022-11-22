@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
+from subprocess import call
 
 from rich.console import RenderableType, RenderResult, Console, ConsoleOptions
 from rich.markup import escape
@@ -181,16 +183,9 @@ class Directory(Widget, can_focus=True):
                 )
             )
         elif self.current_highlighted_path.is_file():
-            # TODO - how do we handle this in Textual?
-            #  Look at ranger/rifle?
-            #  Do we need to disable application mode, let the subprocess take over,
-            #  Then re-enable application mode?
-            from subprocess import call
-            import os
-
-
-            EDITOR = os.environ.get('EDITOR', 'vim')
-            call([EDITOR, str(self.current_highlighted_path.resolve().absolute())])
+            editor = os.environ.get('EDITOR', 'vim')
+            with self.app.suspend():
+                call([editor, str(self.current_highlighted_path.resolve().absolute())])
 
     def action_goto_parent(self):
         self.directory_search.input.value = ""
