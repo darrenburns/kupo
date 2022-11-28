@@ -114,7 +114,7 @@ class Command:
 
 
 @dataclass
-class Cd(Command):
+class ChangeDirectory(Command):
     command: str = "cd"
     syntax: str = "[b]cd[/] [i]PATH[/]"
     description: str = "Go to the directory at [i]PATH[/]."
@@ -153,6 +153,16 @@ class Cd(Command):
 
 
 @dataclass
+class MakeDirectory(Command):
+    command: str = "mkdir"
+    syntax: str = "[b]mkdir[/] [i]PATH[/]"
+    description: str = "Create a directory at PATH"
+
+    def run(self, cmd_line: CommandLine, args: list[str]) -> None:
+        cmd_line.app.exit()
+
+
+@dataclass
 class Quit(Command):
     command: str = "quit"
     syntax: str = "[b]quit[/]"
@@ -164,7 +174,8 @@ class Quit(Command):
 
 # TODO: __init_subclass__ is probably better than manually maintaining this:
 _COMMANDS: dict[str, Command] = {
-    "cd": Cd(),
+    "cd": ChangeDirectory(),
+    "mkdir": MakeDirectory(),
     "q": Quit(),
     "quit": Quit(),
 }

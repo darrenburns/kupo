@@ -187,6 +187,9 @@ class Directory(Widget, can_focus=True):
         self.selected_index = len(self._files) - 1 if self._files else None
 
     def action_choose_path(self):
+        self.goto_selected_path()
+
+    def goto_selected_path(self):
         if self.current_highlighted_path.is_dir():
             self.emit_no_wait(
                 Directory.CurrentDirChanged(

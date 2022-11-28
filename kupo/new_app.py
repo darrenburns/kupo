@@ -26,7 +26,7 @@ from kupo._preview import Preview
 class Home(Screen):
     BINDINGS = [
         Binding("question_mark", "app.push_screen('help')", "Help"),
-        Binding("colon", "focus('command-line-input')", "Focus command line"),
+        Binding("colon", "focus('command-line-input')", "Command line"),
         Binding("ctrl+q", "quit", "Quit", key_display="ctrl+q"),
     ]
 
