@@ -151,10 +151,12 @@ class Directory(Widget, can_focus=True):
 
     @selected_index.setter
     def selected_index(self, new_value: int | None):
+
         if new_value is not None:
             self._selected_index = self._clamp_index(new_value)
-            selected_file = self._files[self._selected_index]
-            self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+            if self._files:
+                selected_file = self._files[self._selected_index]
+                self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
         # If we're scrolled such that the selected index is not on screen.
         # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
         # Then update the scrolling
@@ -190,6 +192,8 @@ class Directory(Widget, can_focus=True):
         self.goto_selected_path()
 
     def goto_selected_path(self):
+        if not self.current_highlighted_path:
+            return
         if self.current_highlighted_path.is_dir():
             self.emit_no_wait(
                 Directory.CurrentDirChanged(
@@ -220,7 +224,7 @@ class Directory(Widget, can_focus=True):
     def _clamp_index(self, new_index: int) -> int | None:
         """Ensure the selected index stays within range"""
         if not self._files:
-            return None
+            return 0
         return clamp(new_index, 0, len(self._files) - 1)
 
     def watch_filter(self, new_filter: str):
@@ -230,6 +234,8 @@ class Directory(Widget, can_focus=True):
 
     @property
     def current_highlighted_path(self):
+        if not self._files:
+            return None
         return self._files[self.selected_index]
 
     def update_source_directory(self, new_path: Path | None) -> None:

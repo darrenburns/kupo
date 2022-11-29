@@ -76,6 +76,9 @@ class CommandLine(Widget):
             return
 
         command.run(cmd_line=self, args=args)
+        self.query_one("#command-line-input", Input).value = ""
+        self.app.query_one("#current-dir", Directory).refresh()
+
 
     def on_descendant_focus(self, event: events.DescendantFocus) -> None:
         self.query_one("#command-line-prompt").add_class("active-prompt")
@@ -149,7 +152,6 @@ class ChangeDirectory(Command):
                     cmd_line, new_dir=target_path, from_dir=None
                 )
             )
-            cmd_line.query_one("#command-line-input", Input).value = ""
 
 
 @dataclass
@@ -158,8 +160,39 @@ class MakeDirectory(Command):
     syntax: str = "[b]mkdir[/] [i]PATH[/]"
     description: str = "Create a directory at PATH"
 
+    @property
+    def arg_parser(self) -> KupoArgParser:
+        parser = KupoArgParser()
+        parser.add_argument("path", type=Path)
+        return parser
+
     def run(self, cmd_line: CommandLine, args: list[str]) -> None:
-        cmd_line.app.exit()
+        parser = self.arg_parser
+
+        try:
+            parsed_args = parser.parse_args(args)
+        except ParsingError:
+            # TODO: indicate error somehow
+            print("WOOPS, couldn't parse that.")
+            return
+
+        path = parsed_args.path
+        if not path:
+            return
+
+        current_dir = cmd_line.app.query_one("#current-dir", Directory)
+        current_path = current_dir.path
+        path = path.expanduser()
+        new_path = current_path.joinpath(path)
+        # TODO: Generic means of confirmation.
+        Path.mkdir(new_path)
+        current_dir.update_source_directory(current_dir.path)
+
+        # TODO: When we add support for parent=True, we'll need to ensure
+        #  we pass the first part of the path arg to select_path, not the full
+        #  thing?
+        current_dir.select_path(new_path)
+        current_dir.focus()
 
 
 @dataclass
