@@ -192,7 +192,7 @@ DiskUsageBar {
     padding: 0 1;
     margin-bottom: 3;
     background: $success;
-    color: black;
+    color: #1f1f1f;
 }
 
 .directory--chosen-path {

@@ -24,7 +24,6 @@ from kupo._files import convert_size, list_files_in_dir, _count_files
 
 
 class EmptyDirectoryRenderable:
-
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
@@ -138,13 +137,13 @@ class Directory(Widget, can_focus=True):
     BINDINGS = [
         Binding("slash", "find", "Find", key_display="/"),
         Binding("escape", "clear_filter", "Clear filters", key_display="ESC"),
-        Binding("l,right,enter", "choose_path", "In", key_display="l"),
-        Binding("h,left", "goto_parent", "Out", key_display="h"),
-        Binding("j,down", "next_file", "Next", key_display="j"),
-        Binding("k,up", "prev_file", "Prev", key_display="k"),
+        Binding("l,right,enter", "choose_path", "In", key_display="l", show=False),
+        Binding("h,left", "goto_parent", "Out", key_display="h", show=False),
+        Binding("j,down", "next_file", "Next", key_display="j", show=False),
+        Binding("k,up", "prev_file", "Prev", key_display="k", show=False),
         Binding("g", "first", "First", key_display="g"),
         Binding("G", "last", "Last"),
-        Binding("space", "toggle_selected", "Toggle selected"),
+        Binding("space", "toggle_selected", "Toggle selected", key_display="space"),
     ]
 
     filter = reactive("")
