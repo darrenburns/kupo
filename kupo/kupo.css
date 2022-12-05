@@ -205,9 +205,9 @@ DiskUsageBar {
 }
 
 .directory--chosen-path-selected {
-    background: $success;
+    background: $success-lighten-1;
 }
 
 .directory--chosen-path-selected-meta {
-    background: $success-lighten-1;
+    background: $success;
 }
