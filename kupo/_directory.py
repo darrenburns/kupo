@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from subprocess import call
 
+from rich.align import Align
 from rich.console import RenderableType, RenderResult, Console, ConsoleOptions
 from rich.markup import escape
 from rich.style import Style
@@ -20,6 +21,14 @@ from textual.widget import Widget
 
 from kupo._directory_search import DirectorySearch
 from kupo._files import convert_size, list_files_in_dir, _count_files
+
+
+class EmptyDirectoryRenderable:
+
+    def __rich_console__(
+        self, console: Console, options: ConsoleOptions
+    ) -> RenderResult:
+        yield Align.center(Text.from_markup("[dim]─ Empty directory ─[/]"))
 
 
 class DirectoryListRenderable:
@@ -46,6 +55,9 @@ class DirectoryListRenderable:
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
     ) -> RenderResult:
+        if not self.files:
+            yield EmptyDirectoryRenderable()
+
         table = Table.grid(expand=True)
         table.add_column()
         table.add_column(justify="right", max_width=8)

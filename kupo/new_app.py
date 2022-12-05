@@ -105,7 +105,7 @@ class Home(Screen):
 
     async def show_syntax(self, path: Path) -> None:
         async with aiofiles.open(path, mode="r") as f:
-            # TODO - if they start scrolling preview, load more than 1024 bytes.
+            # TODO - if they start scrolling preview, load more than 2048 bytes.
             contents = await f.read(2048)
         self.query_one("#preview", Preview).show_syntax(contents, path)
 

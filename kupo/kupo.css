@@ -1,4 +1,4 @@
-$scrollbar-color: $accent-darken-3 50%;
+$scrollbar-color: $accent-darken-3;
 
 Screen {
     background: $background;
@@ -14,7 +14,7 @@ Screen {
 }
 
 #current-dir:focus {
-    tint: $accent 5%;
+    tint: $accent 7%;
     border-left: wide $accent;
     padding-left: 0;
 }
