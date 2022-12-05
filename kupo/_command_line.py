@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import platform
 import shlex
 from dataclasses import dataclass
@@ -25,12 +27,20 @@ class CommandLine(Widget):
         Binding("escape", "cancel", "Cancel", key_display="ESC"),
     ]
 
+    selection_count = reactive(0)
+
     def compose(self) -> ComposeResult:
         yield Horizontal(
             Static(" ❯❯❯ ", id="command-line-prompt"),
             Input(placeholder="Enter a command", id="command-line-input"),
+            Static(id="selection-info"),
             id="command-line-container"
         )
+
+    def watch_selection_count(self, new_count: int) -> None:
+        selection_info = self.query_one("#selection-info", Static)
+        selection_info.display = new_count > 0
+        selection_info.update(f"{self.selection_count} files selected")
 
     def on_input_changed(self, event: Input.Changed) -> None:
         reference = self.app.query_one("#command-reference", CommandReference)
@@ -78,7 +88,6 @@ class CommandLine(Widget):
         command.run(cmd_line=self, args=args)
         self.query_one("#command-line-input", Input).value = ""
         self.app.query_one("#current-dir", Directory).refresh()
-
 
     def on_descendant_focus(self, event: events.DescendantFocus) -> None:
         self.query_one("#command-line-prompt").add_class("active-prompt")

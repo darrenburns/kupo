@@ -109,6 +109,10 @@ class Home(Screen):
             contents = await f.read(2048)
         self.query_one("#preview", Preview).show_syntax(contents, path)
 
+    def on_directory_secondary_selection_changed(self, event: Directory.SecondarySelectionChanged) -> None:
+        command_line = self.query_one("#command-line", CommandLine)
+        command_line.selection_count = len(event.selection)
+
 
 class Help(Screen):
     BINDINGS = [

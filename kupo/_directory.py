@@ -136,7 +136,7 @@ class Directory(Widget, can_focus=True):
     }
     BINDINGS = [
         Binding("slash", "find", "Find", key_display="/"),
-        Binding("escape", "clear_filter", "Clear filters", key_display="ESC"),
+        Binding("escape", "clear_filter", "Clear", key_display="ESC"),
         Binding("l,right,enter", "choose_path", "In", key_display="l", show=False),
         Binding("h,left", "goto_parent", "Out", key_display="h", show=False),
         Binding("j,down", "next_file", "Next", key_display="j", show=False),
@@ -223,6 +223,7 @@ class Directory(Widget, can_focus=True):
             warning_banner.display = False
         self.chosen_paths.clear()
         self.refresh()
+        self._emit_secondary_selection_changed()
 
     def action_first(self):
         self.selected_index = self._clamp_index(0)
@@ -262,6 +263,10 @@ class Directory(Widget, can_focus=True):
         else:
             self.chosen_paths.add(self.current_highlighted_path)
         self.refresh()
+        self._emit_secondary_selection_changed()
+
+    def _emit_secondary_selection_changed(self) -> None:
+        self.emit_no_wait(Directory.SecondarySelectionChanged(self, self.chosen_paths))
 
     def _on_mouse_scroll_down(self, event) -> None:
         if self.has_focus and self.cursor_movement_enabled:
@@ -369,4 +374,11 @@ class Directory(Widget, can_focus=True):
 
         def __init__(self, sender: DOMNode, path: Path) -> None:
             self.path = path
+            super().__init__(sender)
+
+    class SecondarySelectionChanged(Message, bubble=True):
+        """Should be sent to the app when the secondary selection is changed."""
+        def __init__(self, sender: DOMNode, selection: set[Path]) -> None:
+            self.sender = sender
+            self.selection = selection
             super().__init__(sender)

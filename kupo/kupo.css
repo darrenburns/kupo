@@ -211,3 +211,10 @@ DiskUsageBar {
 .directory--chosen-path-selected-meta {
     background: $success;
 }
+
+#selection-info {
+    dock: right;
+    background: $success;
+    color: $text;
+    width: auto;
+}
