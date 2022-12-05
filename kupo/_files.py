@@ -26,7 +26,7 @@ def list_files_in_dir(dir: Path) -> list[Path]:
 
 def _directory_sorter(path: Path) -> tuple[bool, bool, str]:
     name = path.name
-    return (not path.is_dir(), not name.startswith("."), name)
+    return not path.is_dir(), not name.startswith("."), name
 
 
 def _count_files(dir: Path) -> int | None:

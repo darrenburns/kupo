@@ -194,3 +194,20 @@ DiskUsageBar {
     background: $success;
     color: black;
 }
+
+.directory--chosen-path {
+    color: $text;
+    background: $success 50%;
+}
+
+.directory--chosen-path-meta {
+    background: $success-darken-1 50%;
+}
+
+.directory--chosen-path-selected {
+    background: $success;
+}
+
+.directory--chosen-path-selected-meta {
+    background: $success-lighten-1;
+}

@@ -42,6 +42,11 @@ class DirectoryListRenderable:
         highlight_dir_style: Style | None = None,
         meta_column_style: Style | None = None,
         highlight_meta_column_style: Style | None = None,
+        chosen_path_style: Style | None = None,
+        chosen_path_meta_style: Style | None = None,
+        chosen_path_selected_style: Style | None = None,
+        chosen_path_selected_meta_style: Style | None = None,
+        chosen_paths: set[Path] | None = None,
     ) -> None:
         self.files = files
         self.selected_index = selected_index
@@ -51,6 +56,11 @@ class DirectoryListRenderable:
         self.highlight_dir_style = highlight_dir_style
         self.meta_column_style = meta_column_style
         self.highlight_meta_column_style = highlight_meta_column_style
+        self.chosen_path_style = chosen_path_style
+        self.chosen_path_meta_style = chosen_path_meta_style
+        self.chosen_path_selected_style = chosen_path_selected_style
+        self.chosen_path_selected_meta_style = chosen_path_selected_meta_style
+        self.chosen_paths = chosen_paths
 
     def __rich_console__(
         self, console: Console, options: ConsoleOptions
@@ -65,6 +75,7 @@ class DirectoryListRenderable:
         for index, file in enumerate(self.files):
             is_dir = file.is_dir()
             if not self.filter or (self.filter and re.search(self.filter, file.name)):
+
                 if index == self.selected_index:
                     meta_style = self.highlight_meta_column_style
                     if is_dir:
@@ -76,7 +87,17 @@ class DirectoryListRenderable:
                     if is_dir:
                         style = self.dir_style
                     else:
-                        style = ""
+                        style = Style.null()
+
+                if isinstance(style, str):
+                    style = Style.parse(style)
+
+                if self.chosen_paths and file in self.chosen_paths:
+                    style += self.chosen_path_style
+                    meta_style += self.chosen_path_meta_style
+                    if index == self.selected_index:
+                        style += self.chosen_path_selected_style
+                        meta_style += self.chosen_path_selected_meta_style
 
                 file_name = escape(file.name)
                 if is_dir:
@@ -109,6 +130,10 @@ class Directory(Widget, can_focus=True):
         "directory--highlighted-dir",
         "directory--meta-column",
         "directory--highlighted-meta-column",
+        "directory--chosen-path",
+        "directory--chosen-path-meta",
+        "directory--chosen-path-selected",
+        "directory--chosen-path-selected-meta",
     }
     BINDINGS = [
         Binding("slash", "find", "Find", key_display="/"),
@@ -119,6 +144,7 @@ class Directory(Widget, can_focus=True):
         Binding("k,up", "prev_file", "Prev", key_display="k"),
         Binding("g", "first", "First", key_display="g"),
         Binding("G", "last", "Last"),
+        Binding("space", "toggle_selected", "Toggle selected"),
     ]
 
     filter = reactive("")
@@ -135,13 +161,15 @@ class Directory(Widget, can_focus=True):
     ):
         """
         Args:
-            path (Path | None): The Path of the directory to display contents of.
+            path: The Path of the directory to display contents of.
+            chosen_paths: The set of chosen paths (secondary selections).
         """
         super().__init__(name=name, id=id, classes=classes)
         self.path = path or Path.cwd()
         self._files = list_files_in_dir(self.path)
         self.directory_search = directory_search
         self.cursor_movement_enabled = cursor_movement_enabled
+        self.chosen_paths: set[Path] = set()
 
     def key_up(self, event: events.Key) -> None:
         event.stop()
@@ -190,9 +218,12 @@ class Directory(Widget, can_focus=True):
             self.parent.scroll_to_region(Region(0, self.selected_index), animate=False)
 
     def action_clear_filter(self):
-        self.directory_search.input.value = ""
-        warning_banner = self.app.query_one("#current-dir-filter-warning")
-        warning_banner.display = False
+        if self.directory_search.input.value:
+            self.directory_search.input.value = ""
+            warning_banner = self.app.query_one("#current-dir-filter-warning")
+            warning_banner.display = False
+        self.chosen_paths.clear()
+        self.refresh()
 
     def action_first(self):
         self.selected_index = self._clamp_index(0)
@@ -207,6 +238,7 @@ class Directory(Widget, can_focus=True):
         if not self.current_highlighted_path:
             return
         if self.current_highlighted_path.is_dir():
+            self.chosen_paths.clear()
             self.emit_no_wait(
                 Directory.CurrentDirChanged(
                     self, new_dir=self.current_highlighted_path, from_dir=None
@@ -224,6 +256,13 @@ class Directory(Widget, can_focus=True):
                 self, new_dir=self.path.parent, from_dir=self.path
             )
         )
+
+    def action_toggle_selected(self):
+        if self.current_highlighted_path in self.chosen_paths:
+            self.chosen_paths.remove(self.current_highlighted_path)
+        else:
+            self.chosen_paths.add(self.current_highlighted_path)
+        self.refresh()
 
     def _on_mouse_scroll_down(self, event) -> None:
         if self.has_focus and self.cursor_movement_enabled:
@@ -290,6 +329,11 @@ class Directory(Widget, can_focus=True):
         highlight_dir_style = self.get_component_rich_style(
             "directory--highlighted-dir"
         )
+        chosen_path_style = self.get_component_rich_style("directory--chosen-path")
+        chosen_path_meta_style = self.get_component_rich_style("directory--chosen-path-meta")
+
+        chosen_path_selected_style = self.get_component_rich_style("directory--chosen-path-selected")
+        chosen_path_selected_meta_style = self.get_component_rich_style("directory--chosen-path-selected-meta")
         return DirectoryListRenderable(
             files=self._files,
             selected_index=self.selected_index,
@@ -299,6 +343,11 @@ class Directory(Widget, can_focus=True):
             highlight_dir_style=highlight_dir_style,
             meta_column_style=meta_column_style,
             highlight_meta_column_style=highlight_meta_column_style,
+            chosen_path_style=chosen_path_style,
+            chosen_path_meta_style=chosen_path_meta_style,
+            chosen_path_selected_style=chosen_path_selected_style,
+            chosen_path_selected_meta_style=chosen_path_selected_meta_style,
+            chosen_paths=self.chosen_paths,
         )
 
     class CurrentDirChanged(Message, bubble=True):
