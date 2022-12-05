@@ -11,11 +11,6 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 
-class HeaderTitle(Widget):
-    def render(self) -> RenderableType:
-        return " ⌒ ● ⌒ "
-
-
 class HeaderCurrentPath(Widget):
     path = reactive(None, layout=True)
 
