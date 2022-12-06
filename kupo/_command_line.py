@@ -195,7 +195,7 @@ class MakeDirectory(Command):
         new_path = current_path.joinpath(path)
         # TODO: Generic means of confirmation.
         Path.mkdir(new_path)
-        current_dir.update_source_directory(current_dir.path)
+        current_dir.update_source_directory(new_path.parent.resolve())
 
         # TODO: When we add support for parent=True, we'll need to ensure
         #  we pass the first part of the path arg to select_path, not the full
@@ -214,12 +214,46 @@ class Quit(Command):
         cmd_line.app.exit()
 
 
+@dataclass
+class Touch(Command):
+    command: str = "touch"
+    syntax: str = "[b]touch[/] PATH"
+    description: str = "Create an empty file at PATH."
+
+    @property
+    def arg_parser(self) -> KupoArgParser:
+        parser = KupoArgParser()
+        parser.add_argument("path", type=Path)
+        return parser
+
+    def run(self, cmd_line: CommandLine, args: list[str]) -> None:
+        parser = self.arg_parser
+        try:
+            parsed_args = parser.parse_args(args)
+        except ParsingError:
+            # TODO: indicate error somehow
+            print("WOOPS, couldn't parse that.")
+            return
+
+        current_dir = cmd_line.app.query_one("#current-dir", Directory)
+        current_path = current_dir.path
+
+        given_path = parsed_args.path.expanduser()
+        given_path = current_path.joinpath(given_path)
+        Path.touch(given_path)
+
+        current_dir.update_source_directory(given_path.parent.resolve())
+
+        current_dir.select_path(given_path)
+        current_dir.focus()
+
 # TODO: __init_subclass__ is probably better than manually maintaining this:
 _COMMANDS: dict[str, Command] = {
     "cd": ChangeDirectory(),
     "mkdir": MakeDirectory(),
     "q": Quit(),
     "quit": Quit(),
+    "touch": Touch(),
 }
 
 

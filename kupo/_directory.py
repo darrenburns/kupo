@@ -270,7 +270,10 @@ class Directory(Widget, can_focus=True):
         print(f"removing selected files {self.chosen_paths}")
         chosen_paths = self.chosen_paths.copy()
         for path in chosen_paths:
-            rm_tree(path)
+            if path.is_file():
+                os.remove(path)
+            else:
+                rm_tree(path)
             self.chosen_paths.remove(path)
 
         self._emit_secondary_selection_changed()
