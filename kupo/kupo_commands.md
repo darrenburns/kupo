@@ -10,6 +10,11 @@
 * `G` - go to last file in directory
 * `/` - filter the current directory
 
+## Working with files
+
+* `space` - add/remove this file from the selection
+* `D` - delete selected files
+
 ## Moving around inside files
 
 * `g` - go to top of previewed file
@@ -22,6 +27,7 @@
 ### Commands
 
 * `cd PATH` - navigate to PATH
+* `mkdir PATH` - create a directory called PATH and move the cursor to it
 * `q` or `quit` - quit this application 
 
 ## Misc

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 
-def convert_size(size_bytes):
+def convert_size(size_bytes: int) -> str:
     if size_bytes == 0:
         return " 0[dim]B"
     size_name = ("B", "K", "M", "G", "T", "P", "E", "Z", "Y")
@@ -36,3 +36,12 @@ def _count_files(dir: Path) -> int | None:
         return len([1 for x in os.scandir(dir)])
     except PermissionError:
         return None
+
+
+def rm_tree(pth: Path) -> None:
+    for child in pth.iterdir():
+        if child.is_file():
+            child.unlink()
+        else:
+            rm_tree(child)
+    pth.rmdir()

@@ -20,7 +20,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 from kupo._directory_search import DirectorySearch
-from kupo._files import convert_size, list_files_in_dir, _count_files
+from kupo._files import convert_size, list_files_in_dir, _count_files, rm_tree
 
 
 class EmptyDirectoryRenderable:
@@ -141,9 +141,10 @@ class Directory(Widget, can_focus=True):
         Binding("h,left", "goto_parent", "Out", key_display="h", show=False),
         Binding("j,down", "next_file", "Next", key_display="j", show=False),
         Binding("k,up", "prev_file", "Prev", key_display="k", show=False),
-        Binding("g", "first", "First", key_display="g"),
-        Binding("G", "last", "Last"),
+        Binding("g", "first", "First", key_display="g", show=False),
+        Binding("G", "last", "Last", show=False),
         Binding("space", "toggle_selected", "Toggle selected", key_display="space"),
+        Binding("D", "delete_selected", "Delete selected", key_display="D"),
     ]
 
     filter = reactive("")
@@ -265,6 +266,17 @@ class Directory(Widget, can_focus=True):
         self.refresh()
         self._emit_secondary_selection_changed()
 
+    def action_delete_selected(self):
+        print(f"removing selected files {self.chosen_paths}")
+        chosen_paths = self.chosen_paths.copy()
+        for path in chosen_paths:
+            rm_tree(path)
+            self.chosen_paths.remove(path)
+
+        self._emit_secondary_selection_changed()
+        self.update_source_directory(self.path)
+        self.refresh()
+
     def _emit_secondary_selection_changed(self) -> None:
         self.emit_no_wait(Directory.SecondarySelectionChanged(self, self.chosen_paths))
 
@@ -378,6 +390,7 @@ class Directory(Widget, can_focus=True):
 
     class SecondarySelectionChanged(Message, bubble=True):
         """Should be sent to the app when the secondary selection is changed."""
+
         def __init__(self, sender: DOMNode, selection: set[Path]) -> None:
             self.sender = sender
             self.selection = selection
