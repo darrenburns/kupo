@@ -27,6 +27,7 @@
 ### Commands
 
 * `cd PATH` - navigate to PATH
+* `touch PATH` - create a file called PATH and move the cursor to it
 * `mkdir PATH` - create a directory called PATH and move the cursor to it
 * `q` or `quit` - quit this application 
 
