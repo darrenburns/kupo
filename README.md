@@ -1,5 +1,5 @@
 # kupo
-A terminal file browser, kupo!
+A terminal file browser, kupo!!
 
 > ⚠️ Not yet ready for consumption
 

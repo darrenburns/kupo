@@ -156,7 +156,7 @@ class ChangeDirectory(Command):
         path = current_directory.joinpath(path)
         if path.is_dir():
             target_path = path
-            cmd_line.emit_no_wait(
+            cmd_line.post_message_no_wait(
                 Directory.CurrentDirChanged(
                     cmd_line, new_dir=target_path, from_dir=None
                 )

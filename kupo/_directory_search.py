@@ -18,7 +18,6 @@ class DirectorySearch(Widget):
 
     def on_mount(self, event: events.Mount) -> None:
         from ._directory import Directory
-
         self.current_dir = self.app.query_one("#current-dir", Directory)
 
     def on_input_changed(self, event: Input.Changed) -> None:

@@ -196,7 +196,8 @@ class Directory(Widget, can_focus=True):
             self._selected_index = self._clamp_index(new_value)
             if self._files:
                 selected_file = self._files[self._selected_index]
-                self.emit_no_wait(Directory.FilePreviewChanged(self, selected_file))
+                self.post_message_no_wait(
+                    Directory.FilePreviewChanged(self, selected_file))
         # If we're scrolled such that the selected index is not on screen.
         # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
         # Then update the scrolling
@@ -240,7 +241,7 @@ class Directory(Widget, can_focus=True):
             return
         if self.current_highlighted_path.is_dir():
             self.chosen_paths.clear()
-            self.emit_no_wait(
+            self.post_message_no_wait(
                 Directory.CurrentDirChanged(
                     self, new_dir=self.current_highlighted_path, from_dir=None
                 )
@@ -248,11 +249,13 @@ class Directory(Widget, can_focus=True):
         elif self.current_highlighted_path.is_file():
             editor = os.environ.get('EDITOR', 'vim')
             with self.app.suspend():
-                call([editor, str(self.current_highlighted_path.resolve().absolute())])
+                edit_path = self.current_highlighted_path.resolve().absolute()
+                call([editor, str(edit_path)])
+            self.post_message_no_wait(Directory.FilePreviewChanged(self, edit_path))
 
     def action_goto_parent(self):
         self.directory_search.input.value = ""
-        self.emit_no_wait(
+        self.post_message_no_wait(
             Directory.CurrentDirChanged(
                 self, new_dir=self.path.parent, from_dir=self.path
             )
@@ -281,7 +284,8 @@ class Directory(Widget, can_focus=True):
         self.refresh()
 
     def _emit_secondary_selection_changed(self) -> None:
-        self.emit_no_wait(Directory.SecondarySelectionChanged(self, self.chosen_paths))
+        self.post_message_no_wait(
+            Directory.SecondarySelectionChanged(self, self.chosen_paths))
 
     def _on_mouse_scroll_down(self, event) -> None:
         if self.has_focus and self.cursor_movement_enabled:
@@ -349,10 +353,13 @@ class Directory(Widget, can_focus=True):
             "directory--highlighted-dir"
         )
         chosen_path_style = self.get_component_rich_style("directory--chosen-path")
-        chosen_path_meta_style = self.get_component_rich_style("directory--chosen-path-meta")
+        chosen_path_meta_style = self.get_component_rich_style(
+            "directory--chosen-path-meta")
 
-        chosen_path_selected_style = self.get_component_rich_style("directory--chosen-path-selected")
-        chosen_path_selected_meta_style = self.get_component_rich_style("directory--chosen-path-selected-meta")
+        chosen_path_selected_style = self.get_component_rich_style(
+            "directory--chosen-path-selected")
+        chosen_path_selected_meta_style = self.get_component_rich_style(
+            "directory--chosen-path-selected-meta")
         return DirectoryListRenderable(
             files=self._files,
             selected_index=self.selected_index,
