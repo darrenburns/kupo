@@ -6,13 +6,12 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-rich = "^12.6.0"
+rich = ">12.6.0"
 textual = { path = "../textual", develop=true }  # TODO: Update
 aiofiles = "^22.1.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.10.0"
-ward = "^0.66.1-beta.0"
 textual = { path = "../textual", develop=true, extras=["dev"] }  # TODO: Update
 
 [tool.poetry.scripts]
