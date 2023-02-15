@@ -13,7 +13,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Container
 from textual.screen import Screen
-from textual.widgets import Static, Footer, MarkdownViewer
+from textual.widgets import Static, Footer
 
 from kupo._command_line import CommandLine, CommandReference
 from kupo._directory import Directory
