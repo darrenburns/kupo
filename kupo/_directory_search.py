@@ -1,4 +1,4 @@
-from textual import events
+from textual import events, on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widget import Widget
@@ -20,9 +20,8 @@ class DirectorySearch(Widget):
         from ._directory import Directory
         self.current_dir = self.app.query_one("#current-dir", Directory)
 
-    def on_input_changed(self, event: Input.Changed) -> None:
-        if event.sender.id != "directory-search-input":
-            return
+    @on(Input.Changed, "#directory-search-input")
+    def filter_value_changed(self, event: Input.Changed) -> None:
         self.current_dir.filter = event.value
         warning_banner = self.app.query_one("#current-dir-filter-warning")
         warning_banner.display = False

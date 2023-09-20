@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from subprocess import call
 
@@ -196,8 +197,8 @@ class Directory(Widget, can_focus=True):
             self._selected_index = self._clamp_index(new_value)
             if self._files:
                 selected_file = self._files[self._selected_index]
-                self.post_message_no_wait(
-                    Directory.FilePreviewChanged(self, selected_file))
+                self.post_message(
+                    Directory.FilePreviewChanged(selected_file, directory=self))
         # If we're scrolled such that the selected index is not on screen.
         # That is, if the selected index does not lie between scroll_y and scroll_y+content_region.height,
         # Then update the scrolling
@@ -241,9 +242,9 @@ class Directory(Widget, can_focus=True):
             return
         if self.current_highlighted_path.is_dir():
             self.chosen_paths.clear()
-            self.post_message_no_wait(
+            self.post_message(
                 Directory.CurrentDirChanged(
-                    self, new_dir=self.current_highlighted_path, from_dir=None
+                    new_dir=self.current_highlighted_path, from_dir=None
                 )
             )
         elif self.current_highlighted_path.is_file():
@@ -251,13 +252,13 @@ class Directory(Widget, can_focus=True):
             with self.app.suspend():
                 edit_path = self.current_highlighted_path.resolve().absolute()
                 call([editor, str(edit_path)])
-            self.post_message_no_wait(Directory.FilePreviewChanged(self, edit_path))
+            self.post_message(Directory.FilePreviewChanged(edit_path, directory=self))
 
     def action_goto_parent(self):
         self.directory_search.input.value = ""
-        self.post_message_no_wait(
+        self.post_message(
             Directory.CurrentDirChanged(
-                self, new_dir=self.path.parent, from_dir=self.path
+                new_dir=self.path.parent, from_dir=self.path
             )
         )
 
@@ -284,8 +285,8 @@ class Directory(Widget, can_focus=True):
         self.refresh()
 
     def _emit_secondary_selection_changed(self) -> None:
-        self.post_message_no_wait(
-            Directory.SecondarySelectionChanged(self, self.chosen_paths))
+        self.post_message(
+            Directory.SecondarySelectionChanged(self.chosen_paths))
 
     def _on_mouse_scroll_down(self, event) -> None:
         if self.has_focus and self.cursor_movement_enabled:
@@ -376,32 +377,30 @@ class Directory(Widget, can_focus=True):
             chosen_paths=self.chosen_paths,
         )
 
+    @dataclass
     class CurrentDirChanged(Message, bubble=True):
-        def __init__(
-            self, sender: DOMNode, new_dir: Path, from_dir: Path | None
-        ) -> None:
-            """
-            Args:
-                sender: The sending node
-                new_dir: The new active current dir
-                from_dir: Only relevant when we step up the file hierarchy,
-                    for ensuring initial selection in parent starts at correct place.
-            """
-            self.new_dir = new_dir
-            self.from_dir = from_dir
-            super().__init__(sender)
+        """Posted when the current directory changes.
 
+        Attributes:
+            new_dir: The new active current dir
+            from_dir: Only relevant when we step up the file hierarchy,
+                for ensuring initial selection in parent starts at correct place.
+        """
+        new_dir: Path
+        from_dir: Path | None
+
+    @dataclass
     class FilePreviewChanged(Message, bubble=True):
         """Should be sent to the app when the selected file is changed."""
+        path: Path
+        directory: Directory
 
-        def __init__(self, sender: DOMNode, path: Path) -> None:
-            self.path = path
-            super().__init__(sender)
+        @property
+        def control(self) -> Widget | None:
+            return self.directory
 
+
+    @dataclass
     class SecondarySelectionChanged(Message, bubble=True):
         """Should be sent to the app when the secondary selection is changed."""
-
-        def __init__(self, sender: DOMNode, selection: set[Path]) -> None:
-            self.sender = sender
-            self.selection = selection
-            super().__init__(sender)
+        selection: set[Path]

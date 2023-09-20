@@ -7,7 +7,7 @@ from pathlib import Path
 
 from rich.console import RenderableType
 from rich.text import Text
-from textual import events
+from textual import events, on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
@@ -62,10 +62,8 @@ class CommandLine(Widget):
         else:
             reference.display = False
 
+    @on(Input.Submitted, "#command-line-input")
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        if event.sender.id != "command-line-input":
-            return
-
         # # TODO: Add the command to our history (we could save to disk too)
         input = event.value
 
@@ -156,9 +154,9 @@ class ChangeDirectory(Command):
         path = current_directory.joinpath(path)
         if path.is_dir():
             target_path = path
-            cmd_line.post_message_no_wait(
+            cmd_line.post_message(
                 Directory.CurrentDirChanged(
-                    cmd_line, new_dir=target_path, from_dir=None
+                    new_dir=target_path, from_dir=None,
                 )
             )
 

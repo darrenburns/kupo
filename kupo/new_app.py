@@ -8,10 +8,10 @@ from typing import Iterator
 
 import aiofiles
 from rich.markdown import Markdown
-from textual import events
+from textual import events, on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Container
+from textual.containers import Horizontal, Container, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Static, Footer
 
@@ -54,7 +54,7 @@ class Home(Screen):
                 ),
                 id="current-dir-wrapper",
             ),
-            Container(Preview(id="preview"), id="preview-wrapper"),
+            VerticalScroll(Preview(id="preview"), id="preview-wrapper"),
         )
         yield CommandLine(id="command-line")
         yield CommandReference(id="command-reference")
@@ -69,7 +69,8 @@ class Home(Screen):
         self.query_one("#parent-dir", Directory).select_path(self._initial_cwd)
         self.query_one("#current-dir").focus(scroll_visible=False)
 
-    def on_directory_file_preview_changed(self, event: Directory.FilePreviewChanged):
+    @on(Directory.FilePreviewChanged, "#current-dir")
+    def update_file_preview(self, event: Directory.FilePreviewChanged):
         """When we press up or down to highlight different dirs or files, we
         need to update the preview on the right-hand side of the screen."""
 
@@ -77,15 +78,15 @@ class Home(Screen):
         # TODO: Could probably add a readonly flag to Directory to prevent having this check
         path = event.path
         self.query_one(CurrentFileInfoBar).file = path
-        if event.sender.id == "current-dir":
-            if path.is_file():
-                asyncio.create_task(self.show_syntax(path))
-            elif path.is_dir():
-                self.query_one("#preview", Preview).show_directory_preview(path)
+        if path.is_file():
+            asyncio.create_task(self.show_syntax(path))
+        elif path.is_dir():
+            self.query_one("#preview", Preview).show_directory_preview(path)
 
         self.query_one(HeaderCurrentPath).path = path
 
-    def on_directory_current_dir_changed(self, event: Directory.CurrentDirChanged):
+    @on(Directory.CurrentDirChanged)
+    def new_directory_selected(self, event: Directory.CurrentDirChanged):
         # If we change directory, filters no longer apply
         self.query_one("#directory-search-input").value = ""
         new_dir = event.new_dir.resolve()

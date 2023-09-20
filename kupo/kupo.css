@@ -101,13 +101,14 @@ Screen {
     scrollbar-color: $scrollbar-color;
 }
 
+
 Preview {
     height: auto;
     width: auto;
     padding-left: 1;
 }
 
-Preview:focus {
+VerticalScroll:focus > Preview {
     tint: $accent 5%;
     border-left: wide $accent;
     padding-left: 0;
