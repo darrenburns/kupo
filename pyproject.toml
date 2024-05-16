@@ -8,9 +8,7 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 python = "^3.10"
 rich = ">12.6.0"
 aiofiles = "^22.1.0"
-textual-dev = "^1.1.0"
-textual = "^0.37.1"
-
+textual-dev = "^1.5.1"
 [tool.poetry.dev-dependencies]
 black = "^22.10.0"
 
