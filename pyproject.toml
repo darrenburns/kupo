@@ -8,14 +8,14 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 python = "^3.10"
 rich = ">12.6.0"
 aiofiles = "^22.1.0"
-textual-dev = "^1.1.0"
-textual = "^0.37.1"
-
-[tool.poetry.dev-dependencies]
-black = "^22.10.0"
+textual-dev = "^1.5.1"
 
 [tool.poetry.scripts]
 kupo = "kupo.new_app:run"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+ruff = "^0.4.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
